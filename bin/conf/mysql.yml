@@ -1,8 +1,8 @@
 mysql:
     dbs:
         test:
-            user: test
-            passwd: test
-            host: 10.104.26.35
-            dbname: test
+            user: sylar
+            passwd: sylar
+            host: 127.0.0.1
+            dbname: sylar
             pool: 2

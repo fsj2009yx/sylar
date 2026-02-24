@@ -19,6 +19,7 @@ ENABLE_LANGUAGE(ASM)
 include_directories(.)
 include_directories(/apps/sylar/include)
 include_directories(/apps/sylar/tair/include)
+include_directories(/usr/include/jsoncpp)
 #include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdpart)
 #include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdpart/yaml-cpp/include)
 #include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdpart/jsoncpp-1.8.4/include)
@@ -40,6 +41,9 @@ option(WITH_MYSQL "ON for complile with mysql" OFF)
 option(WITH_REDIS "ON for complile with redis" OFF)
 option(WITH_RAPIDJSON "ON for complile with rapidjson" OFF)
 option(ENABLE_PROFILER "ON for enable profiler" OFF)
+add_compile_options( -Werror -Wno-error=address -Wno-error=use-after-free )
+
+
 
 message("****WITH_ZK_CLIENT : ${WITH_ZK_CLIENT} ****")
 message("****WITH_KAFKA : ${WITH_KAFKA} ****")
@@ -225,6 +229,9 @@ message(STATUS ${LIB_SRC})
 
 add_library(sylar STATIC ${LIB_SRC})
 #add_library(sylar SHARED ${LIB_SRC})
+target_compile_options(sylar PRIVATE
+    -Wno-error=builtin-macro-redefined
+)
 force_redefine_file_macro_for_sources(sylar)
 #add_library(sylar_static STATIC ${LIB_SRC})
 #SET_TARGET_PROPERTIES (sylar_static PROPERTIES OUTPUT_NAME "sylar")
