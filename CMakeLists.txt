@@ -41,7 +41,7 @@ option(WITH_MYSQL "ON for complile with mysql" OFF)
 option(WITH_REDIS "ON for complile with redis" OFF)
 option(WITH_RAPIDJSON "ON for complile with rapidjson" OFF)
 option(ENABLE_PROFILER "ON for enable profiler" OFF)
-add_compile_options( -Werror -Wno-error=address -Wno-error=use-after-free )
+add_compile_options( -Wno-error -Wno-error=address -Wno-error=use-after-free )
 
 
 

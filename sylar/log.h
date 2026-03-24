@@ -25,6 +25,13 @@
 /**
  * @brief 使用流式方式将日志级别level的日志写入到logger
  */
+
+//__FILE__宏，它会被预处理器替换成当前源文件的路径和文件名；
+//__LINE__宏，它会被预处理器替换成当前源文件的行号（常做Logger打印调用文件）
+//__FUNCTION__宏，它会被预处理器替换成当前源文件的函数名（常做Logger打印调用函数）
+
+//该宏的作用是：如果logger的日志级别小于等于level，就创建一个LogEvent对象，并将其包装在LogEventWrap对象中，然后返回一个字符串流（std::stringstream）供用户使用。
+//用户可以通过这个字符串流来写入日志内容。当LogEventWrap对象被销毁时，它会自动将日志事件写入到logger中。
 #define SYLAR_LOG_LEVEL(logger, level) \
     if(logger->getLevel() <= level) \
         sylar::LogEventWrap(std::make_shared<sylar::LogEvent>(logger, level, \
@@ -427,10 +434,18 @@ protected:
 /**
  * @brief 日志器
  */
+
+//这是std::enable_shared_from_this的一个用法，它允许一个类的成员函数获取指向该对象的shared_ptr智能指针。
+//在这个例子中，Logger类继承了std::enable_shared_from_this<Logger>，这意味着Logger类的成员函数可以调用shared_from_this()来获取一个指向当前对象的shared_ptr智能指针。
+//这对于在成员函数中需要传递当前对象的shared_ptr智能指针时非常有用，可以避免手动创建新的shared_ptr智能指针，从而提高代码的安全性和效率。
+    //如果使用this->，这个指针是一个裸指针，不具有shared_ptr的引用计数功能，可能会导致内存泄漏或悬空指针等问题。
+    //而使用shared_from_this()可以确保获取到的智能指针正确地管理对象的生命周期，避免了这些潜在的问题。
 class Logger : public std::enable_shared_from_this<Logger> {
 friend class LoggerManager;
 public:
     typedef std::shared_ptr<Logger> ptr;
+    //RWSpinlock读写锁处理多线程并发输出LogAppender不会阻塞，适用于读多写少
+    //且自旋锁性能上优于RWMutex，不过CPU开销大
     typedef RWSpinlock RWMutexType;
 
     /**
