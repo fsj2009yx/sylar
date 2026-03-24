@@ -7,17 +7,17 @@
 namespace sylar {
 
 class RockServer : public TcpServer {
-public:
+   public:
     typedef std::shared_ptr<RockServer> ptr;
-    RockServer(const std::string& type = "rock"
-               ,sylar::IOManager* worker = sylar::IOManager::GetThis()
-               ,sylar::IOManager* io_worker = sylar::IOManager::GetThis()
-               ,sylar::IOManager* accept_worker = sylar::IOManager::GetThis());
+    RockServer(const std::string& type = "rock",
+               sylar::IOManager* worker = sylar::IOManager::GetThis(),
+               sylar::IOManager* io_worker = sylar::IOManager::GetThis(),
+               sylar::IOManager* accept_worker = sylar::IOManager::GetThis());
 
-protected:
+   protected:
     virtual void handleClient(Socket::ptr client) override;
 };
 
-}
+}  // namespace sylar
 
 #endif

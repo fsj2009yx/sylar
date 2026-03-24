@@ -1,14 +1,16 @@
 #include "ns_protocol.h"
-#include <sys/socket.h>
-#include <netinet/in.h>
+
 #include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+
 #include <sstream>
 
 namespace sylar {
 namespace ns {
 
 NSNode::NSNode(const std::string& ip, uint16_t port, uint32_t weight)
-    :m_ip(ip), m_port(port), m_weight(weight) {
+    : m_ip(ip), m_port(port), m_weight(weight) {
     m_id = GetID(ip, port);
 }
 
@@ -19,11 +21,8 @@ uint64_t NSNode::GetID(const std::string& ip, uint16_t port) {
 }
 
 std::ostream& NSNode::dump(std::ostream& os, const std::string& prefix) {
-    os << prefix << "[NSNode id=" << m_id
-       << " ip=" << m_ip
-       << " port=" << m_port
-       << " weight=" << m_weight
-       << "]";
+    os << prefix << "[NSNode id=" << m_id << " ip=" << m_ip << " port=" << m_port
+       << " weight=" << m_weight << "]";
     return os;
 }
 
@@ -33,9 +32,7 @@ std::string NSNode::toString(const std::string& prefix) {
     return ss.str();
 }
 
-NSNodeSet::NSNodeSet(uint32_t cmd)
-    :m_cmd(cmd) {
-}
+NSNodeSet::NSNodeSet(uint32_t cmd) : m_cmd(cmd) {}
 
 size_t NSNodeSet::size() {
     sylar::RWMutex::WriteLock lock(m_mutex);
@@ -51,7 +48,7 @@ NSNode::ptr NSNodeSet::del(uint64_t id) {
     NSNode::ptr rt;
     sylar::RWMutex::WriteLock lock(m_mutex);
     auto it = m_datas.find(id);
-    if(it != m_datas.end()) {
+    if (it != m_datas.end()) {
         rt = it->second;
         m_datas.erase(it);
     }
@@ -62,7 +59,7 @@ std::ostream& NSNodeSet::dump(std::ostream& os, const std::string& prefix) {
     os << prefix << "[NSNodeSet cmd=" << m_cmd;
     sylar::RWMutex::ReadLock lock(m_mutex);
     os << " size=" << m_datas.size() << "]" << std::endl;
-    for(auto& i : m_datas) {
+    for (auto& i : m_datas) {
         i.second->dump(os, prefix + "    ") << std::endl;
     }
     return os;
@@ -82,7 +79,7 @@ NSNode::ptr NSNodeSet::get(uint64_t id) {
 
 void NSNodeSet::listAll(std::vector<NSNode::ptr>& infos) {
     sylar::RWMutex::ReadLock lock(m_mutex);
-    for(auto& i : m_datas) {
+    for (auto& i : m_datas) {
         infos.push_back(i.second);
     }
 }
@@ -101,7 +98,7 @@ std::ostream& NSDomain::dump(std::ostream& os, const std::string& prefix) {
     os << prefix << "[NSDomain name=" << m_domain;
     sylar::RWMutex::ReadLock lock(m_mutex);
     os << " cmd_size=" << m_datas.size() << "]" << std::endl;
-    for(auto& i : m_datas) {
+    for (auto& i : m_datas) {
         i.second->dump(os, prefix + "    ") << std::endl;
     }
     return os;
@@ -115,7 +112,7 @@ std::string NSDomain::toString(const std::string& prefix) {
 
 void NSDomain::add(uint32_t cmd, NSNode::ptr info) {
     auto ns = get(cmd);
-    if(!ns) {
+    if (!ns) {
         ns = std::make_shared<NSNodeSet>(cmd);
         add(ns);
     }
@@ -129,11 +126,11 @@ void NSDomain::del(uint32_t cmd) {
 
 NSNode::ptr NSDomain::del(uint32_t cmd, uint64_t id) {
     auto ns = get(cmd);
-    if(!ns) {
+    if (!ns) {
         return nullptr;
     }
     auto info = ns->del(id);
-    if(!ns->size()) {
+    if (!ns->size()) {
         del(cmd);
     }
     return info;
@@ -147,7 +144,7 @@ NSNodeSet::ptr NSDomain::get(uint32_t cmd) {
 
 void NSDomain::listAll(std::vector<NSNodeSet::ptr>& infos) {
     sylar::RWMutex::ReadLock lock(m_mutex);
-    for(auto& i : m_datas) {
+    for (auto& i : m_datas) {
         infos.push_back(i.second);
     }
 }
@@ -166,13 +163,13 @@ NSDomain::ptr NSDomainSet::get(const std::string& domain, bool auto_create) {
     {
         sylar::RWMutex::ReadLock lock(m_mutex);
         auto it = m_datas.find(domain);
-        if(!auto_create) {
+        if (!auto_create) {
             return it == m_datas.end() ? nullptr : it->second;
         }
     }
     sylar::RWMutex::WriteLock lock(m_mutex);
     auto it = m_datas.find(domain);
-    if(it != m_datas.end()) {
+    if (it != m_datas.end()) {
         return it->second;
     }
     NSDomain::ptr d = std::make_shared<NSDomain>(domain);
@@ -182,11 +179,11 @@ NSDomain::ptr NSDomainSet::get(const std::string& domain, bool auto_create) {
 
 void NSDomainSet::del(const std::string& domain, uint32_t cmd, uint64_t id) {
     auto d = get(domain);
-    if(!d) {
+    if (!d) {
         return;
     }
     auto ns = d->get(cmd);
-    if(!ns) {
+    if (!ns) {
         return;
     }
     ns->del(id);
@@ -194,7 +191,7 @@ void NSDomainSet::del(const std::string& domain, uint32_t cmd, uint64_t id) {
 
 void NSDomainSet::listAll(std::vector<NSDomain::ptr>& infos) {
     sylar::RWMutex::ReadLock lock(m_mutex);
-    for(auto& i : m_datas) {
+    for (auto& i : m_datas) {
         infos.push_back(i.second);
     }
 }
@@ -202,7 +199,7 @@ void NSDomainSet::listAll(std::vector<NSDomain::ptr>& infos) {
 std::ostream& NSDomainSet::dump(std::ostream& os, const std::string& prefix) {
     sylar::RWMutex::ReadLock lock(m_mutex);
     os << prefix << "[NSDomainSet domain_size=" << m_datas.size() << "]" << std::endl;
-    for(auto& i : m_datas) {
+    for (auto& i : m_datas) {
         os << prefix;
         i.second->dump(os, prefix + "    ") << std::endl;
     }
@@ -216,7 +213,7 @@ std::string NSDomainSet::toString(const std::string& prefix) {
 }
 
 void NSDomainSet::swap(NSDomainSet& ds) {
-    if(this == &ds) {
+    if (this == &ds) {
         return;
     }
     sylar::RWMutex::WriteLock lock(m_mutex);
@@ -224,5 +221,5 @@ void NSDomainSet::swap(NSDomainSet& ds) {
     m_datas.swap(ds.m_datas);
 }
 
-}
-}
+}  // namespace ns
+}  // namespace sylar

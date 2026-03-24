@@ -1,13 +1,13 @@
-#include "sylar/sylar.h"
-#include "sylar/pack/pack.h"
+#include "sylar/pack/bytearray_decoder.h"
+#include "sylar/pack/bytearray_encoder.h"
 #include "sylar/pack/json_decoder.h"
 #include "sylar/pack/json_encoder.h"
+#include "sylar/pack/pack.h"
+#include "sylar/pack/rapidjson_decoder.h"
+#include "sylar/pack/rapidjson_encoder.h"
 #include "sylar/pack/yaml_decoder.h"
 #include "sylar/pack/yaml_encoder.h"
-#include "sylar/pack/rapidjson_encoder.h"
-#include "sylar/pack/rapidjson_decoder.h"
-#include "sylar/pack/bytearray_encoder.h"
-#include "sylar/pack/bytearray_decoder.h"
+#include "sylar/sylar.h"
 
 struct Person {
     int id;
@@ -36,11 +36,8 @@ struct Men : public Person {
     SYLAR_PACK(I(Person), O(value, po, mval));
 
     bool operator==(const Men& oth) const {
-        return value == oth.value
-            && id == oth.id
-            && sex == oth.sex
-            && name == oth.name
-            && money == oth.money;
+        return value == oth.value && id == oth.id && sex == oth.sex && name == oth.name &&
+               money == oth.money;
     }
 };
 
@@ -101,7 +98,8 @@ void testMan() {
     sylar::pack::JsonDecoder jd(je.getValue());
     jd.decode(p2, 0);
 
-    std::cout << p2.id << " - " << p2.name << " - " << p2.sex << " - " << p2.money << " - " << p2.value << std::endl;
+    std::cout << p2.id << " - " << p2.name << " - " << p2.sex << " - " << p2.money << " - "
+              << p2.value << std::endl;
 }
 
 void test_array() {
@@ -130,21 +128,20 @@ void test_array() {
     std::cout << sylar::pack::EncodeToJsonString("你好", 0) << std::endl;
 }
 
-std::string JsonToString(const Json::Value & root)
-{
-	static Json::Value def = []() {
-		Json::Value def;
-		Json::StreamWriterBuilder::setDefaults(&def);
-		def["emitUTF8"] = true;
-		return def;
-	}();
+std::string JsonToString(const Json::Value& root) {
+    static Json::Value def = []() {
+        Json::Value def;
+        Json::StreamWriterBuilder::setDefaults(&def);
+        def["emitUTF8"] = true;
+        return def;
+    }();
 
-	std::ostringstream stream;
-	Json::StreamWriterBuilder stream_builder;
-	stream_builder.settings_ = def;//Config emitUTF8
-	std::unique_ptr<Json::StreamWriter> writer(stream_builder.newStreamWriter());
-	writer->write(root, &stream);
-	return stream.str();
+    std::ostringstream stream;
+    Json::StreamWriterBuilder stream_builder;
+    stream_builder.settings_ = def;  // Config emitUTF8
+    std::unique_ptr<Json::StreamWriter> writer(stream_builder.newStreamWriter());
+    writer->write(root, &stream);
+    return stream.str();
 }
 
 void test_yaml() {
@@ -171,17 +168,17 @@ void test_yaml() {
     std::cout << sylar::pack::EncodeToJsonString(vs2, 0) << std::endl;
     std::cout << sylar::pack::EncodeToJsonString(vs, 0) << std::endl;
 
-    //YAML::Node node;
-    //node.push_back(1);
-    //node.push_back(2);
-    //node["arr"].push_back(3);
-    //node["arr"].push_back(4);
-    //std::cout << node << std::endl;
-    std::vector<int> arr {1,2,3, 1};
+    // YAML::Node node;
+    // node.push_back(1);
+    // node.push_back(2);
+    // node["arr"].push_back(3);
+    // node["arr"].push_back(4);
+    // std::cout << node << std::endl;
+    std::vector<int> arr{1, 2, 3, 1};
     std::cout << sylar::pack::EncodeToYamlString(arr, 0) << std::endl;
-    //YAML::Node node;
-    //node = 10;
-    //std::cout << node << std::endl;
+    // YAML::Node node;
+    // node = 10;
+    // std::cout << node << std::endl;
 }
 
 void test_map() {
@@ -219,10 +216,10 @@ void test_rapid() {
     m[1].id = 102;
     m[0].name = "你好";
     m[1].name = "世界";
-    //std::map<std::string, std::string> m;
-    //m["id"] = "\"";
-    //m["age"] = "[";
-    //m["name"] = "你好";
+    // std::map<std::string, std::string> m;
+    // m["id"] = "\"";
+    // m["age"] = "[";
+    // m["name"] = "你好";
     std::string str = sylar::pack::EncodeToRapidJsonString(m, 0);
     std::cout << "test_rapid: " << str << std::endl;
     sylar::pack::DecodeFromRapidJsonString(str, m2, 0);
@@ -236,10 +233,10 @@ void test_bytearray() {
     m[1].id = 102;
     m[0].name = "你好";
     m[1].name = "世界";
-    //std::map<std::string, std::string> m;
-    //m["id"] = "\"";
-    //m["age"] = "[";
-    //m["name"] = "你好";
+    // std::map<std::string, std::string> m;
+    // m["id"] = "\"";
+    // m["age"] = "[";
+    // m["name"] = "你好";
     auto ba = sylar::pack::EncodeToByteArray(m, 0);
     ba->setPosition(0);
     std::cout << "test_bytearray: " << sylar::pack::EncodeToRapidJsonString(m, 0) << std::endl;
@@ -261,10 +258,9 @@ void test_shared() {
 }
 
 int main(int argc, char** argv) {
-    //std::cout << SYLAR_STRING(SYLAR_PACK_OUT(A, A("id", id, "_name", name), O(sex,age))) << std::endl;
-    //std::cout << SYLAR_STRING(SYLAR_PACK(A("id", id, "_name", name), O(sex,age))) << std::endl;
-    //ProfilerStart("test.prof");
-    //HeapProfilerStart("test.heap");
+    // std::cout << SYLAR_STRING(SYLAR_PACK_OUT(A, A("id", id, "_name", name), O(sex,age))) <<
+    // std::endl; std::cout << SYLAR_STRING(SYLAR_PACK(A("id", id, "_name", name), O(sex,age))) <<
+    // std::endl; ProfilerStart("test.prof"); HeapProfilerStart("test.heap");
     test();
     std::cout << sizeof(long double) << std::endl;
     std::cout << sizeof(long long) << std::endl;
@@ -280,14 +276,14 @@ int main(int argc, char** argv) {
     yyn = 10;
     ynode["name"] = "sylar";
     std::cout << ynode << std::endl;
-    //Person p;
-    //std::cout << sylar::pack::EncodeToYamlString(p, 0) << std::endl;
+    // Person p;
+    // std::cout << sylar::pack::EncodeToYamlString(p, 0) << std::endl;
     test_map();
     test_map2();
     test_rapid();
     test_shared();
     test_bytearray();
-    //ProfilerStop();
-    //HeapProfilerStop();
+    // ProfilerStop();
+    // HeapProfilerStop();
     return 0;
 }

@@ -1,4 +1,5 @@
 #include "http2_protocol.h"
+
 #include "sylar/log.h"
 
 namespace sylar {
@@ -26,7 +27,7 @@ static const std::vector<std::string> s_http2error_strings = {
 std::string Http2ErrorToString(Http2Error error) {
     static uint32_t SIZE = s_http2error_strings.size();
     uint8_t v = (uint8_t)error;
-    if(v < SIZE) {
+    if (v < SIZE) {
         return s_http2error_strings[v];
     }
     return "UNKNOW(" + std::to_string((uint32_t)v) + ")";
@@ -37,15 +38,14 @@ std::string Http2Settings::toString() const {
     ss << "[Http2Settings header_table_size=" << header_table_size
        << " max_header_list_size=" << max_header_list_size
        << " max_concurrent_streams=" << max_concurrent_streams
-       << " max_frame_size=" << max_frame_size
-       << " initial_window_size=" << initial_window_size
+       << " max_frame_size=" << max_frame_size << " initial_window_size=" << initial_window_size
        << " enable_push=" << enable_push << "]";
     return ss.str();
 }
 
 void Http2InitRequestForWrite(sylar::http::HttpRequest::ptr req, bool ssl) {
     req->setHeader(":scheme", (ssl ? "https" : "http"));
-    if(!req->hasHeader(":path", nullptr)) {
+    if (!req->hasHeader(":path", nullptr)) {
         req->setHeader(":path", req->getUri());
     }
     req->setHeader(":method", http::HttpMethodToString(req->getMethod()));
@@ -57,9 +57,10 @@ void Http2InitResponseForWrite(sylar::http::HttpResponse::ptr rsp) {
 
 void Http2InitRequestForRead(sylar::http::HttpRequest::ptr req) {
     req->setMethod(http::StringToHttpMethod(req->getHeader(":method")));
-    if(req->hasHeader(":path", nullptr)) {
+    if (req->hasHeader(":path", nullptr)) {
         req->setUri(req->getHeader(":path"));
-        //SYLAR_LOG_INFO(g_logger) << req->getPath() << " - " << req->getQuery() << " - " << req->getFragment();
+        // SYLAR_LOG_INFO(g_logger) << req->getPath() << " - " << req->getQuery() << " - " <<
+        // req->getFragment();
     }
 }
 
@@ -67,5 +68,5 @@ void Http2InitResponseForRead(sylar::http::HttpResponse::ptr rsp) {
     rsp->setStatus((http::HttpStatus)sylar::TypeUtil::Atoi(rsp->getHeader(":status")));
 }
 
-}
-}
+}  // namespace http2
+}  // namespace sylar

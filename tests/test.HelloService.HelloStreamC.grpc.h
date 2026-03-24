@@ -7,14 +7,15 @@
 namespace test {
 namespace HelloService {
 
-class HelloStreamCServlet : public sylar::grpc::GrpcStreamBidirectionServlet<test::HelloRequest, test::HelloResponse> {
-public:
-	int32_t handle(ServerStream::ptr stream) override;
-	GRPC_SERVLET_INIT_NAME(HelloStreamCServlet, "/test.HelloService/HelloStreamC");
+class HelloStreamCServlet
+    : public sylar::grpc::GrpcStreamBidirectionServlet<test::HelloRequest, test::HelloResponse> {
+   public:
+    int32_t handle(ServerStream::ptr stream) override;
+    GRPC_SERVLET_INIT_NAME(HelloStreamCServlet, "/test.HelloService/HelloStreamC");
 
-}; //class HelloStreamCServlet
+};  // class HelloStreamCServlet
 
-} //namespace HelloService
-} //namespace test
+}  // namespace HelloService
+}  // namespace test
 
 #endif

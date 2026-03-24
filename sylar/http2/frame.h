@@ -1,9 +1,9 @@
 #ifndef __SYLAR_HTTP2_FRAME_H__
 #define __SYLAR_HTTP2_FRAME_H__
 
+#include "hpack.h"
 #include "sylar/bytearray.h"
 #include "sylar/stream.h"
-#include "hpack.h"
 
 namespace sylar {
 namespace http2 {
@@ -12,50 +12,33 @@ namespace http2 {
 #pragma pack(1)
 
 enum class FrameType {
-    DATA            = 0x0,
-    HEADERS         = 0x1,
-    PRIORITY        = 0x2,
-    RST_STREAM      = 0x3,
-    SETTINGS        = 0x4,
-    PUSH_PROMISE    = 0x5,
-    PING            = 0x6,
-    GOAWAY          = 0x7,
-    WINDOW_UPDATE   = 0x8,
-    CONTINUATION    = 0x9,
+    DATA = 0x0,
+    HEADERS = 0x1,
+    PRIORITY = 0x2,
+    RST_STREAM = 0x3,
+    SETTINGS = 0x4,
+    PUSH_PROMISE = 0x5,
+    PING = 0x6,
+    GOAWAY = 0x7,
+    WINDOW_UPDATE = 0x8,
+    CONTINUATION = 0x9,
 };
 
-enum class FrameFlagData {
-    END_STREAM      = 0x1,
-    PADDED          = 0x8
-};
+enum class FrameFlagData { END_STREAM = 0x1, PADDED = 0x8 };
 
-enum class FrameFlagHeaders {
-    END_STREAM      = 0x1,
-    END_HEADERS     = 0x4,
-    PADDED          = 0x8,
-    PRIORITY        = 0x20
-};
+enum class FrameFlagHeaders { END_STREAM = 0x1, END_HEADERS = 0x4, PADDED = 0x8, PRIORITY = 0x20 };
 
-enum class FrameFlagSettings {
-    ACK             = 0x1
-};
+enum class FrameFlagSettings { ACK = 0x1 };
 
-enum class FrameFlagPing {
-    ACK             = 0x1
-};
+enum class FrameFlagPing { ACK = 0x1 };
 
-enum class FrameFlagContinuation {
-    END_HEADERS     = 0x4
-};
+enum class FrameFlagContinuation { END_HEADERS = 0x4 };
 
-enum class FrameFlagPromise {
-    END_HEADERS     = 0x4,
-    PADDED          = 0x8
-};
+enum class FrameFlagPromise { END_HEADERS = 0x4, PADDED = 0x8 };
 
 enum class FrameR {
-    UNSET           = 0x0,
-    SET             = 0x1,
+    UNSET = 0x0,
+    SET = 0x1,
 };
 
 /*
@@ -96,7 +79,7 @@ struct FrameHeader {
 };
 
 class IFrame {
-public:
+   public:
     typedef std::shared_ptr<IFrame> ptr;
 
     virtual ~IFrame() {}
@@ -120,12 +103,12 @@ struct Frame {
  |                            Data (*)                         ...
  +---------------------------------------------------------------+
  |                           Padding (*)                       ...
- +---------------------------------------------------------------+ 
+ +---------------------------------------------------------------+
 */
 
 struct DataFrame : public IFrame {
     typedef std::shared_ptr<DataFrame> ptr;
-    uint8_t pad = 0;        //Flag & FrameFlagData::PADDED
+    uint8_t pad = 0;  // Flag & FrameFlagData::PADDED
     std::string data;
     std::string padding;
 
@@ -175,8 +158,8 @@ struct PriorityFrame : public IFrame {
 
 struct HeadersFrame : public IFrame {
     typedef std::shared_ptr<HeadersFrame> ptr;
-    uint8_t pad = 0;        //flag & FrameFlagHeaders::PADDED
-    PriorityFrame priority; //flag & FrameFlagHeaders::PRIORITY
+    uint8_t pad = 0;         // flag & FrameFlagHeaders::PADDED
+    PriorityFrame priority;  // flag & FrameFlagHeaders::PRIORITY
     std::string data;
     std::string padding;
     HPack::ptr hpack;
@@ -212,8 +195,7 @@ struct RstStreamFrame : public IFrame {
 */
 
 struct SettingsItem {
-    SettingsItem(uint16_t id = 0, uint32_t v = 0)
-        :identifier(id), value(v) {}
+    SettingsItem(uint16_t id = 0, uint32_t v = 0) : identifier(id), value(v) {}
     uint16_t identifier = 0;
     uint32_t value = 0;
 
@@ -225,12 +207,12 @@ struct SettingsItem {
 struct SettingsFrame : public IFrame {
     typedef std::shared_ptr<SettingsFrame> ptr;
     enum class Settings {
-        HEADER_TABLE_SIZE           = 0x1,
-        ENABLE_PUSH                 = 0x2,
-        MAX_CONCURRENT_STREAMS      = 0x3,
-        INITIAL_WINDOW_SIZE         = 0x4,
-        MAX_FRAME_SIZE              = 0x5,
-        MAX_HEADER_LIST_SIZE        = 0x6
+        HEADER_TABLE_SIZE = 0x1,
+        ENABLE_PUSH = 0x2,
+        MAX_CONCURRENT_STREAMS = 0x3,
+        INITIAL_WINDOW_SIZE = 0x4,
+        MAX_FRAME_SIZE = 0x5,
+        MAX_HEADER_LIST_SIZE = 0x6
     };
 
     static std::string SettingsToString(Settings s);
@@ -264,7 +246,7 @@ struct PushPromisedFrame : public IFrame {
         };
         uint32_t r_stream_id = 0;
     };
-    std::string data;       //headers
+    std::string data;  // headers
     std::string padding;
 
     std::string toString() const;
@@ -343,13 +325,12 @@ struct WindowUpdateFrame : public IFrame {
 };
 
 class FrameCodec {
-public:
+   public:
     typedef std::shared_ptr<FrameCodec> ptr;
 
     Frame::ptr parseFrom(Stream::ptr stream);
     int32_t serializeTo(Stream::ptr stream, Frame::ptr frame);
 };
-
 
 std::string FrameTypeToString(FrameType type);
 std::string FrameFlagDataToString(FrameFlagData flag);
@@ -363,7 +344,7 @@ std::string FrameRToString(FrameR r);
 
 #pragma pack(pop)
 
-}
-}
+}  // namespace http2
+}  // namespace sylar
 
 #endif

@@ -2,18 +2,20 @@
 #define __SYLAR_DS_ROARING_BITMAP_H__
 
 #include <stdint.h>
+
+#include <functional>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
-#include <functional>
-#include "sylar/bytearray.h"
+
 #include "roaring.hh"
+#include "sylar/bytearray.h"
 
 namespace sylar {
 namespace ds {
 
 class RoaringBitmap {
-public:
+   public:
     typedef std::shared_ptr<RoaringBitmap> ptr;
 
     RoaringBitmap();
@@ -35,15 +37,15 @@ public:
     RoaringBitmap& operator-=(const RoaringBitmap& b);
     RoaringBitmap& operator^=(const RoaringBitmap& b);
 
-    RoaringBitmap operator& (const RoaringBitmap& b);
-    RoaringBitmap operator| (const RoaringBitmap& b);
-    RoaringBitmap operator- (const RoaringBitmap& b);
-    RoaringBitmap operator^ (const RoaringBitmap& b);
+    RoaringBitmap operator&(const RoaringBitmap& b);
+    RoaringBitmap operator|(const RoaringBitmap& b);
+    RoaringBitmap operator-(const RoaringBitmap& b);
+    RoaringBitmap operator^(const RoaringBitmap& b);
 
-    //RoaringBitmap& operator~();
+    // RoaringBitmap& operator~();
 
-    bool operator== (const RoaringBitmap& b) const;
-    bool operator!= (const RoaringBitmap& b) const;
+    bool operator==(const RoaringBitmap& b) const;
+    bool operator!=(const RoaringBitmap& b) const;
 
     RoaringBitmap::ptr compress() const;
     RoaringBitmap::ptr uncompress() const;
@@ -52,36 +54,46 @@ public:
 
     void listPosAsc(std::vector<uint32_t>& pos);
 
-    void foreach(std::function<bool(uint32_t)> cb);
+    void foreach (std::function<bool(uint32_t)> cb);
     void rforeach(std::function<bool(uint32_t)> cb);
 
     void writeTo(sylar::ByteArray::ptr ba) const;
     bool readFrom(sylar::ByteArray::ptr ba);
 
-    //uncompress to compress
-    //uncompress to uncompress
+    // uncompress to compress
+    // uncompress to uncompress
     bool cross(const RoaringBitmap& b) const;
 
     float getCompressRate() const;
 
     uint32_t getCount() const;
-public:
+
+   public:
     typedef RoaringSetBitForwardIterator iterator;
     typedef RoaringSetBitReverseIterator reverse_iterator;
 
-    iterator begin() const { return m_bitmap.begin();}
-    iterator end() const { return m_bitmap.end(); }
+    iterator begin() const {
+        return m_bitmap.begin();
+    }
+    iterator end() const {
+        return m_bitmap.end();
+    }
 
-    reverse_iterator rbegin() const { return m_bitmap.rbegin();}
-    reverse_iterator rend() const { return m_bitmap.rend();}
+    reverse_iterator rbegin() const {
+        return m_bitmap.rbegin();
+    }
+    reverse_iterator rend() const {
+        return m_bitmap.rend();
+    }
 
-private:
+   private:
     RoaringBitmap(const Roaring& b);
-private:
+
+   private:
     Roaring m_bitmap;
 };
 
-}
-}
+}  // namespace ds
+}  // namespace sylar
 
 #endif

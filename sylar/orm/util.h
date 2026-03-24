@@ -2,6 +2,7 @@
 #define __SYLAR_ORM_UTIL_H__
 
 #include <tinyxml2.h>
+
 #include <string>
 
 namespace sylar {
@@ -15,7 +16,7 @@ std::string GetAsSetFunName(const std::string& v);
 std::string XmlToString(const tinyxml2::XMLNode& node);
 std::string GetAsDefineMacro(const std::string& v);
 
-}
-}
+}  // namespace orm
+}  // namespace sylar
 
 #endif

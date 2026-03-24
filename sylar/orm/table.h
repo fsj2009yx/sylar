@@ -1,28 +1,40 @@
 #ifndef __SYLAR_ORM_TABLE_H__
 #define __SYLAR_ORM_TABLE_H__
 
+#include <fstream>
+
 #include "column.h"
 #include "index.h"
-#include <fstream>
 
 namespace sylar {
 namespace orm {
 
 class Table {
-public:
+   public:
     typedef std::shared_ptr<Table> ptr;
-    const std::string& getName() const { return m_name;}
-    const std::string& getNamespace() const { return m_namespace;}
-    const std::string& getDesc() const { return m_desc;}
+    const std::string& getName() const {
+        return m_name;
+    }
+    const std::string& getNamespace() const {
+        return m_namespace;
+    }
+    const std::string& getDesc() const {
+        return m_desc;
+    }
 
-    const std::vector<Column::ptr>& getCols() const { return m_cols;}
-    const std::vector<Index::ptr>& getIdxs() const { return  m_idxs;}
+    const std::vector<Column::ptr>& getCols() const {
+        return m_cols;
+    }
+    const std::vector<Index::ptr>& getIdxs() const {
+        return m_idxs;
+    }
     bool init(const tinyxml2::XMLElement& node);
 
     void gen(const std::string& path);
 
     std::string getFilename() const;
-private:
+
+   private:
     void gen_inc(const std::string& path);
     void gen_src(const std::string& path);
     std::string genToStringInc();
@@ -39,11 +51,9 @@ private:
     void gen_dao_inc(std::ofstream& ofs);
     void gen_dao_src(std::ofstream& ofs);
 
-    enum DBType {
-        TYPE_SQLITE3 = 1,
-        TYPE_MYSQL = 2
-    };
-private:
+    enum DBType { TYPE_SQLITE3 = 1, TYPE_MYSQL = 2 };
+
+   private:
     std::string m_name;
     std::string m_namespace;
     std::string m_desc;
@@ -56,7 +66,7 @@ private:
     std::vector<Index::ptr> m_idxs;
 };
 
-}
-}
+}  // namespace orm
+}  // namespace sylar
 
 #endif

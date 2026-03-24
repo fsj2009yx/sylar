@@ -3,7 +3,7 @@
 namespace name_space {
 
 class MyModule : public sylar::Module {
-public:
+   public:
     typedef std::shared_ptr<MyModule> ptr;
     MyModule();
     bool onLoad() override;
@@ -12,4 +12,4 @@ public:
     bool onServerUp() override;
 };
 
-}
+}  // namespace name_space

@@ -1,47 +1,47 @@
 #ifndef __SYLAR_NS_NAME_SERVER_MODULE_H__
 #define __SYLAR_NS_NAME_SERVER_MODULE_H__
 
-#include "sylar/module.h"
 #include "ns_protocol.h"
+#include "sylar/module.h"
 
 namespace sylar {
 namespace ns {
 
 class NameServerModule;
 class NSClientInfo {
-friend class NameServerModule;
-public:
+    friend class NameServerModule;
+
+   public:
     typedef std::shared_ptr<NSClientInfo> ptr;
-private:
+
+   private:
     NSNode::ptr m_node;
     std::map<std::string, std::set<uint32_t> > m_domain2cmds;
 };
 
 class NameServerModule : public RockModule {
-public:
+   public:
     typedef std::shared_ptr<NameServerModule> ptr;
     NameServerModule();
 
-    virtual bool handleRockRequest(sylar::RockRequest::ptr request
-                        ,sylar::RockResponse::ptr response
-                        ,sylar::RockStream::ptr stream) override;
-    virtual bool handleRockNotify(sylar::RockNotify::ptr notify
-                        ,sylar::RockStream::ptr stream) override;
+    virtual bool handleRockRequest(sylar::RockRequest::ptr request,
+                                   sylar::RockResponse::ptr response,
+                                   sylar::RockStream::ptr stream) override;
+    virtual bool handleRockNotify(sylar::RockNotify::ptr notify,
+                                  sylar::RockStream::ptr stream) override;
     virtual bool onConnect(sylar::Stream::ptr stream) override;
     virtual bool onDisconnect(sylar::Stream::ptr stream) override;
     virtual std::string statusString() override;
-private:
-    bool handleRegister(sylar::RockRequest::ptr request
-                        ,sylar::RockResponse::ptr response
-                        ,sylar::RockStream::ptr stream);
-    bool handleQuery(sylar::RockRequest::ptr request
-                        ,sylar::RockResponse::ptr response
-                        ,sylar::RockStream::ptr stream);
-    bool handleTick(sylar::RockRequest::ptr request
-                        ,sylar::RockResponse::ptr response
-                        ,sylar::RockStream::ptr stream);
 
-private:
+   private:
+    bool handleRegister(sylar::RockRequest::ptr request, sylar::RockResponse::ptr response,
+                        sylar::RockStream::ptr stream);
+    bool handleQuery(sylar::RockRequest::ptr request, sylar::RockResponse::ptr response,
+                     sylar::RockStream::ptr stream);
+    bool handleTick(sylar::RockRequest::ptr request, sylar::RockResponse::ptr response,
+                    sylar::RockStream::ptr stream);
+
+   private:
     NSClientInfo::ptr get(sylar::RockStream::ptr rs);
     void set(sylar::RockStream::ptr rs, NSClientInfo::ptr info);
 
@@ -50,7 +50,8 @@ private:
     void doNotify(std::set<std::string>& domains, std::shared_ptr<NotifyMessage> nty);
 
     std::set<sylar::RockStream::ptr> getStreams(const std::string& domain);
-private:
+
+   private:
     NSDomainSet::ptr m_domains;
 
     sylar::RWMutex m_mutex;
@@ -62,7 +63,7 @@ private:
     std::map<std::string, std::set<sylar::RockStream::ptr> > m_domainToSessions;
 };
 
-}
-}
+}  // namespace ns
+}  // namespace sylar
 
 #endif

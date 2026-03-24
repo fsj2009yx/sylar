@@ -17,7 +17,7 @@ namespace sylar {
  * @brief 线程类
  */
 class Thread : Noncopyable {
-public:
+   public:
     /// 线程智能指针类型
     typedef std::shared_ptr<Thread> ptr;
 
@@ -36,12 +36,16 @@ public:
     /**
      * @brief 线程ID
      */
-    pid_t getId() const { return m_id;}
+    pid_t getId() const {
+        return m_id;
+    }
 
     /**
      * @brief 线程名称
      */
-    const std::string& getName() const { return m_name;}
+    const std::string& getName() const {
+        return m_name;
+    }
 
     /**
      * @brief 等待线程执行完成
@@ -63,13 +67,14 @@ public:
      * @param[in] name 线程名称
      */
     static void SetName(const std::string& name);
-private:
 
+   private:
     /**
      * @brief 线程执行函数
      */
     static void* run(void* arg);
-private:
+
+   private:
     /// 线程id
     pid_t m_id = -1;
     /// 线程结构
@@ -82,6 +87,6 @@ private:
     Semaphore m_semaphore;
 };
 
-}
+}  // namespace sylar
 
 #endif

@@ -8,16 +8,16 @@ namespace sylar {
 namespace http {
 
 class MetricsServlet : public Servlet {
-public:
+   public:
     MetricsServlet();
-    virtual int32_t handle(sylar::http::HttpRequest::ptr request
-                   , sylar::http::HttpResponse::ptr response
-                   , sylar::SocketStream::ptr session) override;
+    virtual int32_t handle(sylar::http::HttpRequest::ptr request,
+                           sylar::http::HttpResponse::ptr response,
+                           sylar::SocketStream::ptr session) override;
 };
 
 PrometheusRegistry::ptr GetPrometheusRegistry();
 
-}
-}
+}  // namespace http
+}  // namespace sylar
 
 #endif

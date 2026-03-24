@@ -1,19 +1,19 @@
 #ifndef __SYLAR_HTTP2_HTTP2_SOCKET_STREAM_H__
 #define __SYLAR_HTTP2_HTTP2_SOCKET_STREAM_H__
 
-#include "sylar/mutex.h"
-#include "sylar/streams/async_socket_stream.h"
 #include "frame.h"
 #include "hpack.h"
+#include "http2_protocol.h"
 #include "http2_stream.h"
 #include "sylar/http/http_connection.h"
-#include "http2_protocol.h"
+#include "sylar/mutex.h"
+#include "sylar/streams/async_socket_stream.h"
 
 namespace sylar {
 namespace http2 {
 
 class Http2SocketStream : public AsyncSocketStream {
-public:
+   public:
     friend class http2::Http2Stream;
     typedef std::shared_ptr<Http2SocketStream> ptr;
     typedef sylar::RWSpinlock RWMutexType;
@@ -44,18 +44,29 @@ public:
     Http2Stream::ptr getStream(uint32_t id);
     void delStream(uint32_t id);
 
-    DynamicTable& getSendTable() { return m_sendTable;}
-    DynamicTable& getRecvTable() { return m_recvTable;}
+    DynamicTable& getSendTable() {
+        return m_sendTable;
+    }
+    DynamicTable& getRecvTable() {
+        return m_recvTable;
+    }
 
-    Http2Settings& getOwnerSettings() { return m_owner;}
-    Http2Settings& getPeerSettings() { return m_peer;}
+    Http2Settings& getOwnerSettings() {
+        return m_owner;
+    }
+    Http2Settings& getPeerSettings() {
+        return m_peer;
+    }
 
-    bool isSsl() const { return m_ssl;}
+    bool isSsl() const {
+        return m_ssl;
+    }
 
-    //StreamClient::ptr openStreamClient(sylar::http::HttpRequest::ptr request);
+    // StreamClient::ptr openStreamClient(sylar::http::HttpRequest::ptr request);
     Http2Stream::ptr openStream(sylar::http::HttpRequest::ptr request);
     void onClose() override;
-protected:
+
+   protected:
     struct FrameSendCtx : public SendCtx {
         typedef std::shared_ptr<FrameSendCtx> ptr;
         Frame::ptr frame;
@@ -80,19 +91,21 @@ protected:
 
     virtual Ctx::ptr doRecv() override;
 
-protected:
+   protected:
     void handleWindowUpdate(Frame::ptr frame);
     void handleRecvData(Frame::ptr frame, Http2Stream::ptr stream);
-protected:
+
+   protected:
     void updateSettings(Http2Settings& sts, SettingsFrame::ptr frame);
-    //virtual void handleRequest(http::HttpRequest::ptr req, Http2Stream::ptr stream);
+    // virtual void handleRequest(http::HttpRequest::ptr req, Http2Stream::ptr stream);
     void updateSendWindowByDiff(int32_t diff);
     void updateRecvWindowByDiff(int32_t diff);
     void onTimeOut(AsyncSocketStream::Ctx::ptr ctx) override;
 
     virtual AsyncSocketStream::Ctx::ptr onStreamClose(Http2Stream::ptr stream) = 0;
     virtual AsyncSocketStream::Ctx::ptr onHeaderEnd(Http2Stream::ptr stream) = 0;
-protected:
+
+   protected:
     DynamicTable m_sendTable;
     DynamicTable m_recvTable;
     FrameCodec::ptr m_codec;
@@ -110,7 +123,7 @@ protected:
     int32_t m_recvWindow = DEFAULT_INITIAL_WINDOW_SIZE;
 };
 
-}
-}
+}  // namespace http2
+}  // namespace sylar
 
 #endif

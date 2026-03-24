@@ -1,16 +1,17 @@
 #ifndef __SYLAR_STREAMS_ASYNC_SOCKET_STREAM_H__
 #define __SYLAR_STREAMS_ASYNC_SOCKET_STREAM_H__
 
-#include "socket_stream.h"
+#include <boost/any.hpp>
 #include <list>
 #include <unordered_map>
-#include <boost/any.hpp>
+
+#include "socket_stream.h"
 
 namespace sylar {
 
-class AsyncSocketStream : public SocketStream
-                         ,public std::enable_shared_from_this<AsyncSocketStream> {
-public:
+class AsyncSocketStream : public SocketStream,
+                          public std::enable_shared_from_this<AsyncSocketStream> {
+   public:
     typedef std::shared_ptr<AsyncSocketStream> ptr;
     typedef sylar::RWMutex RWMutexType;
     typedef std::function<bool(AsyncSocketStream::ptr)> connect_callback;
@@ -20,16 +21,18 @@ public:
 
     virtual bool start();
     virtual void close() override;
-public:
+
+   public:
     enum Error {
         OK = 0,
         TIMEOUT = -1,
         IO_ERROR = -2,
         NOT_CONNECT = -3,
     };
-protected:
+
+   protected:
     struct SendCtx {
-    public:
+       public:
         typedef std::shared_ptr<SendCtx> ptr;
         virtual ~SendCtx() {}
 
@@ -37,7 +40,7 @@ protected:
     };
 
     struct Ctx : public SendCtx {
-    public:
+       public:
         typedef std::shared_ptr<Ctx> ptr;
         virtual ~Ctx() {}
         Ctx();
@@ -56,25 +59,47 @@ protected:
         virtual void doRsp();
     };
 
-public:
-    void setWorker(sylar::IOManager* v) { m_worker = v;}
-    sylar::IOManager* getWorker() const { return m_worker;}
+   public:
+    void setWorker(sylar::IOManager* v) {
+        m_worker = v;
+    }
+    sylar::IOManager* getWorker() const {
+        return m_worker;
+    }
 
-    void setIOManager(sylar::IOManager* v) { m_iomanager = v;}
-    sylar::IOManager* getIOManager() const { return m_iomanager;}
+    void setIOManager(sylar::IOManager* v) {
+        m_iomanager = v;
+    }
+    sylar::IOManager* getIOManager() const {
+        return m_iomanager;
+    }
 
-    bool isAutoConnect() const { return m_autoConnect;}
-    void setAutoConnect(bool v) { m_autoConnect = v;}
+    bool isAutoConnect() const {
+        return m_autoConnect;
+    }
+    void setAutoConnect(bool v) {
+        m_autoConnect = v;
+    }
 
-    connect_callback getConnectCb() const { return m_connectCb;}
-    disconnect_callback getDisconnectCb() const { return m_disconnectCb;}
-    void setConnectCb(connect_callback v) { m_connectCb = v;}
-    void setDisconnectCb(disconnect_callback v) { m_disconnectCb = v;}
+    connect_callback getConnectCb() const {
+        return m_connectCb;
+    }
+    disconnect_callback getDisconnectCb() const {
+        return m_disconnectCb;
+    }
+    void setConnectCb(connect_callback v) {
+        m_connectCb = v;
+    }
+    void setDisconnectCb(disconnect_callback v) {
+        m_disconnectCb = v;
+    }
 
-    template<class T>
-    void setData(const T& v) { m_data = v;}
+    template <class T>
+    void setData(const T& v) {
+        m_data = v;
+    }
 
-    template<class T>
+    template <class T>
     T getData() const {
         try {
             return boost::any_cast<T>(m_data);
@@ -82,7 +107,8 @@ public:
         }
         return T();
     }
-protected:
+
+   protected:
     virtual void doRead();
     virtual void doWrite();
     virtual void startRead();
@@ -94,19 +120,19 @@ protected:
     Ctx::ptr getCtx(uint32_t sn);
     Ctx::ptr getAndDelCtx(uint32_t sn);
 
-    template<class T>
+    template <class T>
     std::shared_ptr<T> getCtxAs(uint32_t sn) {
         auto ctx = getCtx(sn);
-        if(ctx) {
+        if (ctx) {
             return std::dynamic_pointer_cast<T>(ctx);
         }
         return nullptr;
     }
 
-    template<class T>
+    template <class T>
     std::shared_ptr<T> getAndDelCtxAs(uint32_t sn) {
         auto ctx = getAndDelCtx(sn);
-        if(ctx) {
+        if (ctx) {
             return std::dynamic_pointer_cast<T>(ctx);
         }
         return nullptr;
@@ -117,7 +143,8 @@ protected:
 
     bool innerClose();
     bool waitFiber();
-protected:
+
+   protected:
     sylar::FiberSemaphore m_sem;
     sylar::FiberSemaphore m_waitSem;
     RWMutexType m_queueMutex;
@@ -136,12 +163,13 @@ protected:
     disconnect_callback m_disconnectCb;
 
     boost::any m_data;
-public:
+
+   public:
     bool recving = false;
 };
 
 class AsyncSocketStreamManager {
-public:
+   public:
     typedef sylar::RWMutex RWMutexType;
     typedef AsyncSocketStream::connect_callback connect_callback;
     typedef AsyncSocketStream::disconnect_callback disconnect_callback;
@@ -153,20 +181,25 @@ public:
     void clear();
     void setConnection(const std::vector<AsyncSocketStream::ptr>& streams);
     AsyncSocketStream::ptr get();
-    template<class T>
+    template <class T>
     std::shared_ptr<T> getAs() {
         auto rt = get();
-        if(rt) {
+        if (rt) {
             return std::dynamic_pointer_cast<T>(rt);
         }
         return nullptr;
     }
 
-    connect_callback getConnectCb() const { return m_connectCb;}
-    disconnect_callback getDisconnectCb() const { return m_disconnectCb;}
+    connect_callback getConnectCb() const {
+        return m_connectCb;
+    }
+    disconnect_callback getDisconnectCb() const {
+        return m_disconnectCb;
+    }
     void setConnectCb(connect_callback v);
     void setDisconnectCb(disconnect_callback v);
-private:
+
+   private:
     RWMutexType m_mutex;
     uint32_t m_size;
     uint32_t m_idx;
@@ -175,6 +208,6 @@ private:
     disconnect_callback m_disconnectCb;
 };
 
-}
+}  // namespace sylar
 
 #endif

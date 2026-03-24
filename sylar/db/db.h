@@ -7,7 +7,7 @@
 namespace sylar {
 
 class ISQLData {
-public:
+   public:
     typedef std::shared_ptr<ISQLData> ptr;
     virtual ~ISQLData() {}
 
@@ -54,7 +54,7 @@ public:
 };
 
 class ISQLUpdate {
-public:
+   public:
     virtual ~ISQLUpdate() {}
     virtual int execute(const char* format, ...) = 0;
     virtual int execute(const std::string& sql) = 0;
@@ -62,16 +62,16 @@ public:
 };
 
 class ISQLQuery {
-public:
+   public:
     virtual ~ISQLQuery() {}
     virtual ISQLData::ptr query(const char* format, ...) = 0;
     virtual ISQLData::ptr query(const std::string& sql) = 0;
 };
 
 class IStmt {
-public:
+   public:
     typedef std::shared_ptr<IStmt> ptr;
-    virtual ~IStmt(){}
+    virtual ~IStmt() {}
     virtual int bindInt8(int idx, const int8_t& value) = 0;
     virtual int bindUint8(int idx, const uint8_t& value) = 0;
     virtual int bindInt16(int idx, const int16_t& value) = 0;
@@ -98,7 +98,7 @@ public:
 };
 
 class ITransaction : public ISQLUpdate {
-public:
+   public:
     typedef std::shared_ptr<ITransaction> ptr;
     virtual ~ITransaction() {};
     virtual bool begin() = 0;
@@ -106,9 +106,8 @@ public:
     virtual bool rollback() = 0;
 };
 
-class IDB : public ISQLUpdate
-            ,public ISQLQuery {
-public:
+class IDB : public ISQLUpdate, public ISQLQuery {
+   public:
     typedef std::shared_ptr<IDB> ptr;
     virtual ~IDB() {}
 
@@ -118,6 +117,6 @@ public:
     virtual ITransaction::ptr openTransaction(bool auto_commit = false) = 0;
 };
 
-}
+}  // namespace sylar
 
 #endif

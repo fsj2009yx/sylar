@@ -8,7 +8,7 @@ namespace HelloService {
 
 void RegisterService(sylar::grpc::GrpcServer::ptr server);
 
-} //namespace HelloService
-} //namespace test
+}  // namespace HelloService
+}  // namespace test
 
 #endif

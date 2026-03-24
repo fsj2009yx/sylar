@@ -1,45 +1,49 @@
 #include "grpc_loadbalance.h"
-#include "sylar/log.h"
-#include "sylar/config.h"
-#include "sylar/worker.h"
-#include "sylar/streams/zlib_stream.h"
-#include "grpc_util.h"
-#include "grpc_connection.h"
+
 #include <sstream>
+
+#include "grpc_connection.h"
+#include "grpc_util.h"
+#include "sylar/config.h"
+#include "sylar/log.h"
+#include "sylar/streams/zlib_stream.h"
+#include "sylar/worker.h"
 
 namespace sylar {
 namespace grpc {
 
 static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
-static sylar::ConfigVar<std::unordered_map<std::string
-    ,std::unordered_map<std::string, std::string> > >::ptr g_grpc_services =
-    sylar::Config::Lookup("grpc_services", std::unordered_map<std::string
-    ,std::unordered_map<std::string, std::string> >(), "grpc_services");
+static sylar::ConfigVar<
+    std::unordered_map<std::string, std::unordered_map<std::string, std::string> > >::ptr
+    g_grpc_services = sylar::Config::Lookup(
+        "grpc_services",
+        std::unordered_map<std::string, std::unordered_map<std::string, std::string> >(),
+        "grpc_services");
 
-GrpcSDLoadBalance::GrpcSDLoadBalance(IServiceDiscovery::ptr sd)
-    :SDLoadBalance(sd) {
+GrpcSDLoadBalance::GrpcSDLoadBalance(IServiceDiscovery::ptr sd) : SDLoadBalance(sd) {
     m_type = "grpc";
 }
 
-static SocketStream::ptr create_grpc_stream(const std::string& domain, const std::string& service, ServiceItemInfo::ptr info) {
-    //SYLAR_LOG_INFO(g_logger) << "create_grpck_stream: " << info->toString();
+static SocketStream::ptr create_grpc_stream(const std::string& domain, const std::string& service,
+                                            ServiceItemInfo::ptr info) {
+    // SYLAR_LOG_INFO(g_logger) << "create_grpck_stream: " << info->toString();
     sylar::IPAddress::ptr addr = sylar::Address::LookupAnyIPAddress(info->getIp());
-    if(!addr) {
+    if (!addr) {
         SYLAR_LOG_ERROR(g_logger) << "invalid service info: " << info->toString();
         return nullptr;
     }
     auto port = info->getDataAs<uint16_t>("gRPC.port");
-    if(port) {
+    if (port) {
         addr->setPort(port);
     } else {
         addr->setPort(info->getPort());
     }
     GrpcConnection::ptr conn = std::make_shared<GrpcConnection>();
 
-    sylar::WorkerMgr::GetInstance()->schedule("service_io", [conn, addr, domain, service](){
+    sylar::WorkerMgr::GetInstance()->schedule("service_io", [conn, addr, domain, service]() {
         conn->connect(addr);
-        //SYLAR_LOG_INFO(g_logger) << *addr << " - " << domain << " - " << service;
+        // SYLAR_LOG_INFO(g_logger) << *addr << " - " << domain << " - " << service;
         conn->start();
     });
     return conn;
@@ -51,8 +55,8 @@ void GrpcSDLoadBalance::start() {
     SDLoadBalance::start();
 }
 
-void GrpcSDLoadBalance::start(const std::unordered_map<std::string
-                              ,std::unordered_map<std::string,std::string> >& confs) {
+void GrpcSDLoadBalance::start(
+    const std::unordered_map<std::string, std::unordered_map<std::string, std::string> >& confs) {
     m_cb = create_grpc_stream;
     initConf(confs);
     SDLoadBalance::start();
@@ -63,13 +67,14 @@ void GrpcSDLoadBalance::stop() {
 }
 
 GrpcResponse::ptr GrpcSDLoadBalance::request(const std::string& domain, const std::string& service,
-                                           GrpcRequest::ptr req, uint32_t timeout_ms, uint64_t idx) {
+                                             GrpcRequest::ptr req, uint32_t timeout_ms,
+                                             uint64_t idx) {
     auto lb = get(domain, service);
-    if(!lb) {
+    if (!lb) {
         return std::make_shared<GrpcResponse>(ILoadBalance::NO_SERVICE, "no_service", 0);
     }
     auto conn = lb->get(idx);
-    if(!conn) {
+    if (!conn) {
         return std::make_shared<GrpcResponse>(ILoadBalance::NO_CONNECTION, "no_connection", 0);
     }
     uint64_t ts = sylar::GetCurrentMS();
@@ -79,12 +84,12 @@ GrpcResponse::ptr GrpcSDLoadBalance::request(const std::string& domain, const st
     auto r = conn->getStreamAs<GrpcConnection>()->request(req, timeout_ms);
     uint64_t ts2 = sylar::GetCurrentMS();
     r->setUsed(ts2 - ts);
-    if(r->getResult() == 0) {
+    if (r->getResult() == 0) {
         stats.incOks(1);
-        stats.incUsedTime(ts2 -ts);
-    } else if(r->getResult() == AsyncSocketStream::TIMEOUT) {
+        stats.incUsedTime(ts2 - ts);
+    } else if (r->getResult() == AsyncSocketStream::TIMEOUT) {
         stats.incTimeouts(1);
-    } else if(r->getResult() < 0) {
+    } else if (r->getResult() < 0) {
         stats.incErrs(1);
     }
     stats.decDoing(1);
@@ -92,16 +97,16 @@ GrpcResponse::ptr GrpcSDLoadBalance::request(const std::string& domain, const st
 }
 
 GrpcResponse::ptr GrpcSDLoadBalance::request(const std::string& domain, const std::string& service,
-                                           const std::string& method, PbMessagePtr message,
-                                           uint32_t timeout_ms,
-                                           const std::map<std::string, std::string>& headers,
-                                           uint64_t idx) {
+                                             const std::string& method, PbMessagePtr message,
+                                             uint32_t timeout_ms,
+                                             const std::map<std::string, std::string>& headers,
+                                             uint64_t idx) {
     auto lb = get(domain, service);
-    if(!lb) {
+    if (!lb) {
         return std::make_shared<GrpcResponse>(ILoadBalance::NO_SERVICE, "no_service", 0);
     }
     auto conn = lb->get(idx);
-    if(!conn) {
+    if (!conn) {
         return std::make_shared<GrpcResponse>(ILoadBalance::NO_CONNECTION, "no_connection", 0);
     }
     uint64_t ts = sylar::GetCurrentMS();
@@ -111,38 +116,36 @@ GrpcResponse::ptr GrpcSDLoadBalance::request(const std::string& domain, const st
     auto r = conn->getStreamAs<GrpcConnection>()->request(method, message, timeout_ms, headers);
     uint64_t ts2 = sylar::GetCurrentMS();
     r->setUsed(ts2 - ts);
-    if(r->getResult() == 0) {
+    if (r->getResult() == 0) {
         stats.incOks(1);
-        stats.incUsedTime(ts2 -ts);
-    } else if(r->getResult() == AsyncSocketStream::TIMEOUT) {
+        stats.incUsedTime(ts2 - ts);
+    } else if (r->getResult() == AsyncSocketStream::TIMEOUT) {
         stats.incTimeouts(1);
-    } else if(r->getResult() < 0) {
+    } else if (r->getResult() < 0) {
         stats.incErrs(1);
     }
     stats.decDoing(1);
     return r;
 }
 
-
 GrpcStream::ptr GrpcSDLoadBalance::openGrpcStream(const std::string& domain,
-                                   const std::string& service,
-                                   const std::string& method,
-                                   const std::map<std::string, std::string>& headers,
-                                   uint64_t idx) {
+                                                  const std::string& service,
+                                                  const std::string& method,
+                                                  const std::map<std::string, std::string>& headers,
+                                                  uint64_t idx) {
     auto lb = get(domain, service);
-    if(!lb) {
+    if (!lb) {
         return nullptr;
-        //return std::make_shared<GrpcResponse>(ILoadBalance::NO_SERVICE, "no_service", 0);
+        // return std::make_shared<GrpcResponse>(ILoadBalance::NO_SERVICE, "no_service", 0);
     }
     auto conn = lb->get(idx);
-    if(!conn) {
-        //return std::make_shared<GrpcResponse>(ILoadBalance::NO_CONNECTION, "no_connection", 0);
+    if (!conn) {
+        // return std::make_shared<GrpcResponse>(ILoadBalance::NO_CONNECTION, "no_connection", 0);
         return nullptr;
     }
 
     return conn->getStreamAs<GrpcConnection>()->openGrpcStream(method, headers);
 }
-
 
 /*
 GrpcStreamBase::GrpcStreamBase(GrpcStreamClient::ptr client)
@@ -165,5 +168,5 @@ int32_t GrpcStreamBase::close(int err) {
 }
 */
 
-}
-}
+}  // namespace grpc
+}  // namespace sylar

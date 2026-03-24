@@ -1,25 +1,23 @@
 #ifndef __SYLAR_STREAMS_ZLIB_STREAM_H__
 #define __SYLAR_STREAMS_ZLIB_STREAM_H__
 
-#include "sylar/stream.h"
+#include <stdint.h>
 #include <sys/uio.h>
 #include <zlib.h>
-#include <stdint.h>
-#include <vector>
-#include <string>
+
 #include <memory>
+#include <string>
+#include <vector>
+
+#include "sylar/stream.h"
 
 namespace sylar {
 
 class ZlibStream : public Stream {
-public:
+   public:
     typedef std::shared_ptr<ZlibStream> ptr;
 
-    enum Type {
-        ZLIB,
-        DEFLATE,
-        GZIP
-    };
+    enum Type { ZLIB, DEFLATE, GZIP };
 
     enum Strategy {
         DEFAULT = Z_DEFAULT_STRATEGY,
@@ -39,9 +37,9 @@ public:
     static ZlibStream::ptr CreateGzip(bool encode, uint32_t buff_size = 4096);
     static ZlibStream::ptr CreateZlib(bool encode, uint32_t buff_size = 4096);
     static ZlibStream::ptr CreateDeflate(bool encode, uint32_t buff_size = 4096);
-    static ZlibStream::ptr Create(bool encode, uint32_t buff_size = 4096,
-            Type type = DEFLATE, int level = DEFAULT_COMPRESSION, int window_bits = 15
-            ,int memlevel = 8, Strategy strategy = DEFAULT);
+    static ZlibStream::ptr Create(bool encode, uint32_t buff_size = 4096, Type type = DEFLATE,
+                                  int level = DEFAULT_COMPRESSION, int window_bits = 15,
+                                  int memlevel = 8, Strategy strategy = DEFAULT);
 
     ZlibStream(bool encode, uint32_t buff_size = 4096);
     ~ZlibStream();
@@ -54,22 +52,34 @@ public:
 
     int flush();
 
-    bool isFree() const { return m_free;}
-    void setFree(bool v) { m_free = v;}
+    bool isFree() const {
+        return m_free;
+    }
+    void setFree(bool v) {
+        m_free = v;
+    }
 
-    bool isEncode() const { return m_encode;}
-    void setEndcode(bool v) { m_encode = v;}
+    bool isEncode() const {
+        return m_encode;
+    }
+    void setEndcode(bool v) {
+        m_encode = v;
+    }
 
-    std::vector<iovec>& getBuffers() { return m_buffs;}
+    std::vector<iovec>& getBuffers() {
+        return m_buffs;
+    }
     std::string getResult() const;
     sylar::ByteArray::ptr getByteArray();
-private:
-    int init(Type type = DEFLATE, int level = DEFAULT_COMPRESSION
-             ,int window_bits = 15, int memlevel = 8, Strategy strategy = DEFAULT);
+
+   private:
+    int init(Type type = DEFLATE, int level = DEFAULT_COMPRESSION, int window_bits = 15,
+             int memlevel = 8, Strategy strategy = DEFAULT);
 
     int encode(const iovec* v, const uint64_t& size, bool finish);
     int decode(const iovec* v, const uint64_t& size, bool finish);
-private:
+
+   private:
     z_stream m_zstream;
     uint32_t m_buffSize;
     bool m_encode;
@@ -77,6 +87,6 @@ private:
     std::vector<iovec> m_buffs;
 };
 
-}
+}  // namespace sylar
 
 #endif

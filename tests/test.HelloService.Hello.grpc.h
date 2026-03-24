@@ -8,13 +8,13 @@ namespace test {
 namespace HelloService {
 
 class HelloServlet : public sylar::grpc::GrpcUnaryServlet<test::HelloRequest, test::HelloResponse> {
-public:
-	int32_t handle(ReqPtr req, RspPtr rsp) override;
-	GRPC_SERVLET_INIT_NAME(HelloServlet, "/test.HelloService/Hello");
+   public:
+    int32_t handle(ReqPtr req, RspPtr rsp) override;
+    GRPC_SERVLET_INIT_NAME(HelloServlet, "/test.HelloService/Hello");
 
-}; //class HelloServlet
+};  // class HelloServlet
 
-} //namespace HelloService
-} //namespace test
+}  // namespace HelloService
+}  // namespace test
 
 #endif

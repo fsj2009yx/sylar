@@ -9,11 +9,12 @@
 #ifndef __SYLAR_HTTP_SERVLET_H__
 #define __SYLAR_HTTP_SERVLET_H__
 
-#include <memory>
 #include <functional>
+#include <memory>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
+
 #include "http.h"
 #include "http_session.h"
 #include "sylar/thread.h"
@@ -26,7 +27,7 @@ namespace http {
  * @brief Servlet封装
  */
 class Servlet {
-public:
+   public:
     /// 智能指针类型定义
     typedef std::shared_ptr<Servlet> ptr;
 
@@ -34,8 +35,7 @@ public:
      * @brief 构造函数
      * @param[in] name 名称
      */
-    Servlet(const std::string& name)
-        :m_name(name) {}
+    Servlet(const std::string& name) : m_name(name) {}
 
     /**
      * @brief 析构函数
@@ -49,15 +49,18 @@ public:
      * @param[in] session HTTP连接
      * @return 是否处理成功
      */
-    virtual int32_t handle(sylar::http::HttpRequest::ptr request
-                   , sylar::http::HttpResponse::ptr response
-                   , sylar::SocketStream::ptr session) = 0;
-                   
+    virtual int32_t handle(sylar::http::HttpRequest::ptr request,
+                           sylar::http::HttpResponse::ptr response,
+                           sylar::SocketStream::ptr session) = 0;
+
     /**
      * @brief 返回Servlet名称
      */
-    const std::string& getName() const { return m_name;}
-protected:
+    const std::string& getName() const {
+        return m_name;
+    }
+
+   protected:
     /// 名称
     std::string m_name;
 };
@@ -66,30 +69,31 @@ protected:
  * @brief 函数式Servlet
  */
 class FunctionServlet : public Servlet {
-public:
+   public:
     /// 智能指针类型定义
     typedef std::shared_ptr<FunctionServlet> ptr;
     /// 函数回调类型定义
-    typedef std::function<int32_t (sylar::http::HttpRequest::ptr request
-                   , sylar::http::HttpResponse::ptr response
-                   , sylar::SocketStream::ptr session)> callback;
-
+    typedef std::function<int32_t(sylar::http::HttpRequest::ptr request,
+                                  sylar::http::HttpResponse::ptr response,
+                                  sylar::SocketStream::ptr session)>
+        callback;
 
     /**
      * @brief 构造函数
      * @param[in] cb 回调函数
      */
     FunctionServlet(callback cb);
-    virtual int32_t handle(sylar::http::HttpRequest::ptr request
-                   , sylar::http::HttpResponse::ptr response
-                   , sylar::SocketStream::ptr session) override;
-private:
+    virtual int32_t handle(sylar::http::HttpRequest::ptr request,
+                           sylar::http::HttpResponse::ptr response,
+                           sylar::SocketStream::ptr session) override;
+
+   private:
     /// 回调函数
     callback m_cb;
 };
 
 class IServletCreator {
-public:
+   public:
     typedef std::shared_ptr<IServletCreator> ptr;
     virtual ~IServletCreator() {}
     virtual Servlet::ptr get() const = 0;
@@ -97,11 +101,9 @@ public:
 };
 
 class HoldServletCreator : public IServletCreator {
-public:
+   public:
     typedef std::shared_ptr<HoldServletCreator> ptr;
-    HoldServletCreator(Servlet::ptr slt)
-        :m_servlet(slt) {
-    }
+    HoldServletCreator(Servlet::ptr slt) : m_servlet(slt) {}
 
     Servlet::ptr get() const override {
         return m_servlet;
@@ -110,17 +112,17 @@ public:
     std::string getName() const override {
         return m_servlet->getName();
     }
-private:
+
+   private:
     Servlet::ptr m_servlet;
 };
 
-template<class T>
+template <class T>
 class ServletCreator : public IServletCreator {
-public:
+   public:
     typedef std::shared_ptr<ServletCreator> ptr;
 
-    ServletCreator() {
-    }
+    ServletCreator() {}
 
     Servlet::ptr get() const override {
         return std::make_shared<T>();
@@ -135,7 +137,7 @@ public:
  * @brief Servlet分发器
  */
 class ServletDispatch : public Servlet {
-public:
+   public:
     /// 智能指针类型定义
     typedef std::shared_ptr<ServletDispatch> ptr;
     /// 读写锁类型定义
@@ -145,9 +147,9 @@ public:
      * @brief 构造函数
      */
     ServletDispatch();
-    virtual int32_t handle(sylar::http::HttpRequest::ptr request
-                   , sylar::http::HttpResponse::ptr response
-                   , sylar::SocketStream::ptr session) override;
+    virtual int32_t handle(sylar::http::HttpRequest::ptr request,
+                           sylar::http::HttpResponse::ptr response,
+                           sylar::SocketStream::ptr session) override;
 
     /**
      * @brief 添加servlet
@@ -180,12 +182,12 @@ public:
     void addServletCreator(const std::string& uri, IServletCreator::ptr creator);
     void addGlobServletCreator(const std::string& uri, IServletCreator::ptr creator);
 
-    template<class T>
+    template <class T>
     void addServletCreator(const std::string& uri) {
         addServletCreator(uri, std::make_shared<ServletCreator<T> >());
     }
 
-    template<class T>
+    template <class T>
     void addGlobServletCreator(const std::string& uri) {
         addGlobServletCreator(uri, std::make_shared<ServletCreator<T> >());
     }
@@ -205,14 +207,17 @@ public:
     /**
      * @brief 返回默认servlet
      */
-    Servlet::ptr getDefault() const { return m_default;}
+    Servlet::ptr getDefault() const {
+        return m_default;
+    }
 
     /**
      * @brief 设置默认servlet
      * @param[in] v servlet
      */
-    void setDefault(Servlet::ptr v) { m_default = v;}
-
+    void setDefault(Servlet::ptr v) {
+        m_default = v;
+    }
 
     /**
      * @brief 通过uri获取servlet
@@ -237,7 +242,8 @@ public:
 
     void listAllServletCreator(std::map<std::string, IServletCreator::ptr>& infos);
     void listAllGlobServletCreator(std::map<std::string, IServletCreator::ptr>& infos);
-private:
+
+   private:
     /// 读写互斥量
     RWMutexType m_mutex;
     /// 精准匹配servlet MAP
@@ -254,23 +260,23 @@ private:
  * @brief NotFoundServlet(默认返回404)
  */
 class NotFoundServlet : public Servlet {
-public:
+   public:
     /// 智能指针类型定义
     typedef std::shared_ptr<NotFoundServlet> ptr;
     /**
      * @brief 构造函数
      */
     NotFoundServlet(const std::string& name);
-    virtual int32_t handle(sylar::http::HttpRequest::ptr request
-                   , sylar::http::HttpResponse::ptr response
-                   , sylar::SocketStream::ptr session) override;
+    virtual int32_t handle(sylar::http::HttpRequest::ptr request,
+                           sylar::http::HttpResponse::ptr response,
+                           sylar::SocketStream::ptr session) override;
 
-private:
+   private:
     std::string m_name;
     std::string m_content;
 };
 
-}
-}
+}  // namespace http
+}  // namespace sylar
 
 #endif

@@ -139,28 +139,33 @@ namespace sylar {
   }
 */
 class ArrowListArray {
-public:
+   public:
     typedef std::shared_ptr<ArrowListArray> ptr;
     ArrowListArray(std::shared_ptr<arrow::ListArray> data);
     int32_t getLength() const;
     std::shared_ptr<arrow::Array> getValue(int32_t idx) const;
     bool isNull(int32_t idx) const;
-    std::shared_ptr<arrow::ListArray> getData() const { return m_data;}
+    std::shared_ptr<arrow::ListArray> getData() const {
+        return m_data;
+    }
 
-    template<class T>
+    template <class T>
     std::shared_ptr<T> getValueAs(int32_t idx) const {
         return std::dynamic_pointer_cast<T>(getValue(idx));
     }
-private:
-std::shared_ptr<arrow::ListArray> m_data;
+
+   private:
+    std::shared_ptr<arrow::ListArray> m_data;
 };
 
 class ArrowChunkedArray {
-public:
+   public:
     typedef std::shared_ptr<ArrowChunkedArray> ptr;
     ArrowChunkedArray(std::shared_ptr<arrow::ChunkedArray> data);
 
-    std::shared_ptr<arrow::ChunkedArray> getData() const { return m_data;}
+    std::shared_ptr<arrow::ChunkedArray> getData() const {
+        return m_data;
+    }
     std::string toString() const;
 
     int64_t getLength() const;
@@ -170,54 +175,54 @@ public:
     ArrowChunkedArray::ptr slice(int64_t offset, int64_t length) const;
 
     std::shared_ptr<arrow::Array> chunk(int32_t idx) const;
-    template<class T>
+    template <class T>
     std::shared_ptr<T> chunkAs(int32_t idx) const {
         return std::dynamic_pointer_cast<T>(chunk(idx));
     }
 
     ArrowListArray::ptr chunkListType(int32_t idx) const;
-    //BinaryArray
-    //LargeBinaryArray
-    //FixedSizeBinaryArray
-    //StringArray
-    //LargeStringArray
-    //ListArray
-    //LargeListArray
-    //MapArray
-    //FixedSizeListArray
-    //StructArray
-    //Decimal128Array
-    //Decimal256Array
-    //SparseUnionArray
-    //DenseUnionArray
-    //BooleanArray
-    //Int8Array
-    //Int16Array
-    //Int32Array
-    //Int64Array
-    //UInt8Array
-    //UInt16Array
-    //UInt32Array
-    //UInt64Array
-    //HalfFloatArray
-    //FloatArray
-    //DoubleArray
-    //Date32Array
-    //Date64Array
-    //Time32Array
-    //Time64Array
-    //TimestampArray
-    //MonthIntervalArray
-    //DayTimeIntervalArray
-    //MonthDayNanoIntervalArray
-    //DurationArray
-    //ExtensionArray
-private:
+    // BinaryArray
+    // LargeBinaryArray
+    // FixedSizeBinaryArray
+    // StringArray
+    // LargeStringArray
+    // ListArray
+    // LargeListArray
+    // MapArray
+    // FixedSizeListArray
+    // StructArray
+    // Decimal128Array
+    // Decimal256Array
+    // SparseUnionArray
+    // DenseUnionArray
+    // BooleanArray
+    // Int8Array
+    // Int16Array
+    // Int32Array
+    // Int64Array
+    // UInt8Array
+    // UInt16Array
+    // UInt32Array
+    // UInt64Array
+    // HalfFloatArray
+    // FloatArray
+    // DoubleArray
+    // Date32Array
+    // Date64Array
+    // Time32Array
+    // Time64Array
+    // TimestampArray
+    // MonthIntervalArray
+    // DayTimeIntervalArray
+    // MonthDayNanoIntervalArray
+    // DurationArray
+    // ExtensionArray
+   private:
     std::shared_ptr<arrow::ChunkedArray> m_data;
 };
 
 class ArrowSchema {
-public:
+   public:
     typedef std::shared_ptr<ArrowSchema> ptr;
     ArrowSchema(std::shared_ptr<arrow::Schema> schema);
 
@@ -225,17 +230,22 @@ public:
     std::shared_ptr<arrow::Field> getFieldByName(const std::string& name) const;
     int32_t getFieldIndex(const std::string& name) const;
 
-    std::shared_ptr<arrow::Schema> getData() const { return m_data;}
+    std::shared_ptr<arrow::Schema> getData() const {
+        return m_data;
+    }
     std::string toString() const;
-private:
+
+   private:
     std::shared_ptr<arrow::Schema> m_data;
 };
 
 class ArrowTable {
-public:
+   public:
     typedef std::shared_ptr<ArrowTable> ptr;
     ArrowTable(std::shared_ptr<arrow::Table> tab);
-    std::shared_ptr<arrow::Table> getData() const { return m_data;}
+    std::shared_ptr<arrow::Table> getData() const {
+        return m_data;
+    }
     ArrowSchema::ptr getSchema() const;
     std::string toString() const;
 
@@ -249,15 +259,18 @@ public:
 
     ArrowChunkedArray::ptr getColumnData(int32_t index) const;
     ArrowChunkedArray::ptr getColumnData(const std::string& name) const;
-private:
+
+   private:
     std::shared_ptr<arrow::Table> m_data;
 };
 
 class ParquetFileReader {
-public:
+   public:
     typedef std::shared_ptr<ParquetFileReader> ptr;
     static ParquetFileReader::ptr Open(const std::string& filename);
-    parquet::arrow::FileReader* getData() const { return m_data.get();}
+    parquet::arrow::FileReader* getData() const {
+        return m_data.get();
+    }
 
     ArrowSchema::ptr getSchema() const;
 
@@ -267,45 +280,53 @@ public:
 
     std::shared_ptr<parquet::FileMetaData> getMetadata() const;
     std::string toString() const;
-private:
+
+   private:
     std::unique_ptr<parquet::arrow::FileReader> m_data;
 };
 
-//ListBuilder, MapBuilder, Append() to start element
+// ListBuilder, MapBuilder, Append() to start element
 class ArrowTableBuilder {
-public:
+   public:
     typedef std::shared_ptr<ArrowTableBuilder> ptr;
     ArrowTableBuilder();
-    int32_t addColumn(const std::string& name, std::shared_ptr<arrow::DataType> type, bool nullable);
-    int32_t addListColumn(const std::string& name, std::shared_ptr<arrow::DataType> type, bool list_nullable, bool value_nullable);
-    int32_t addMapColumn(const std::string& name, std::shared_ptr<arrow::DataType> type, bool list_nullable, bool value_nullable);
+    int32_t addColumn(const std::string& name, std::shared_ptr<arrow::DataType> type,
+                      bool nullable);
+    int32_t addListColumn(const std::string& name, std::shared_ptr<arrow::DataType> type,
+                          bool list_nullable, bool value_nullable);
+    int32_t addMapColumn(const std::string& name, std::shared_ptr<arrow::DataType> type,
+                         bool list_nullable, bool value_nullable);
     int32_t addMapColumn(const std::string& name, std::shared_ptr<arrow::DataType> key_type,
-                         std::shared_ptr<arrow::DataType> value_type, bool nullable, bool key_sorted = false);
-    //int32_t addStructColumn(const std::string& name, const std::vector<std::shared_ptr<arrow::DataType>>& types, bool nullable);
+                         std::shared_ptr<arrow::DataType> value_type, bool nullable,
+                         bool key_sorted = false);
+    // int32_t addStructColumn(const std::string& name, const
+    // std::vector<std::shared_ptr<arrow::DataType>>& types, bool nullable);
     int32_t getColumnIndex(const std::string& name) const;
 
     std::shared_ptr<arrow::ArrayBuilder> getColumn(int32_t idx) const;
     std::shared_ptr<arrow::ArrayBuilder> getColumn(const std::string& name) const;
 
-    template<class T>
+    template <class T>
     std::shared_ptr<T> getColumnAs(int32_t idx) const {
         return std::dynamic_pointer_cast<T>(getColumn(idx));
     }
 
-    template<class T>
+    template <class T>
     std::shared_ptr<T> getColumnAs(const std::string& name) const {
         return std::dynamic_pointer_cast<T>(getColumn(name));
     }
 
     std::shared_ptr<arrow::Table> finish();
-private:
+
+   private:
     std::vector<std::shared_ptr<arrow::Field>> m_fields;
     std::vector<std::shared_ptr<arrow::ArrayBuilder>> m_builders;
     std::map<std::string, int32_t> m_name2indexs;
 };
 
-bool WriteParquetFile(const std::shared_ptr<arrow::Table>& table, const std::string& name, int32_t rowgroups);
+bool WriteParquetFile(const std::shared_ptr<arrow::Table>& table, const std::string& name,
+                      int32_t rowgroups);
 
-}
+}  // namespace sylar
 
 #endif

@@ -9,10 +9,10 @@
 #ifndef __SYLAR_SOCKET_STREAM_H__
 #define __SYLAR_SOCKET_STREAM_H__
 
-#include "sylar/stream.h"
-#include "sylar/socket.h"
-#include "sylar/mutex.h"
 #include "sylar/iomanager.h"
+#include "sylar/mutex.h"
+#include "sylar/socket.h"
+#include "sylar/stream.h"
 
 namespace sylar {
 
@@ -20,7 +20,7 @@ namespace sylar {
  * @brief Socket流
  */
 class SocketStream : public Stream {
-public:
+   public:
     typedef std::shared_ptr<SocketStream> ptr;
 
     /**
@@ -88,7 +88,9 @@ public:
     /**
      * @brief 返回Socket类
      */
-    Socket::ptr getSocket() const { return m_socket;}
+    Socket::ptr getSocket() const {
+        return m_socket;
+    }
 
     /**
      * @brief 返回是否连接
@@ -101,15 +103,18 @@ public:
     std::string getRemoteAddressString();
     std::string getLocalAddressString();
 
-    uint64_t getId() const { return m_id;}
-protected:
+    uint64_t getId() const {
+        return m_id;
+    }
+
+   protected:
     /// Socket类
     Socket::ptr m_socket;
-    uint64_t m_id:63;
+    uint64_t m_id : 63;
     /// 是否主控
-    bool m_owner:1;
+    bool m_owner : 1;
 };
 
-}
+}  // namespace sylar
 
 #endif

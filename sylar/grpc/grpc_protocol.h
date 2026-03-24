@@ -2,6 +2,7 @@
 #define __SYLAR_GRPC_GRPC_PROTOCOL_H__
 
 #include <google/protobuf/message.h>
+
 #include "sylar/bytearray.h"
 #include "sylar/http/http.h"
 
@@ -26,23 +27,31 @@ struct GrpcMessage {
 };
 
 class GrpcRequest {
-public:
+   public:
     typedef std::shared_ptr<GrpcRequest> ptr;
 
-    http::HttpRequest::ptr getRequest() const { return m_request;}
-    GrpcMessage::ptr getData() const { return m_data;}
-    void setRequest(http::HttpRequest::ptr v) { m_request = v;}
-    void setData(GrpcMessage::ptr v) { m_data = v;}
+    http::HttpRequest::ptr getRequest() const {
+        return m_request;
+    }
+    GrpcMessage::ptr getData() const {
+        return m_data;
+    }
+    void setRequest(http::HttpRequest::ptr v) {
+        m_request = v;
+    }
+    void setData(GrpcMessage::ptr v) {
+        m_data = v;
+    }
     std::string toString() const;
 
-    template<class T>
+    template <class T>
     std::shared_ptr<T> getAsPB() const {
-        if(!m_data) {
+        if (!m_data) {
             return nullptr;
         }
         try {
             std::shared_ptr<T> data = std::make_shared<T>();
-            if(data->ParseFromString(m_data->data)) {
+            if (data->ParseFromString(m_data->data)) {
                 return data;
             }
         } catch (...) {
@@ -51,46 +60,65 @@ public:
     }
 
     bool setAsPB(const google::protobuf::Message& msg);
-private:
+
+   private:
     http::HttpRequest::ptr m_request;
     GrpcMessage::ptr m_data;
 };
 
 class GrpcResponse {
-public:
+   public:
     typedef std::shared_ptr<GrpcResponse> ptr;
-    GrpcResponse() {
-    }
+    GrpcResponse() {}
 
     GrpcResponse(int32_t result, const std::string& err, int32_t used)
-        :m_result(result), m_used(used), m_error(err) {
+        : m_result(result), m_used(used), m_error(err) {}
+
+    int getResult() const {
+        return m_result;
+    }
+    void setResult(int v) {
+        m_result = v;
     }
 
-    int getResult() const { return m_result;}
-    void setResult(int v) { m_result = v;}
+    const std::string& getError() const {
+        return m_error;
+    }
+    void setError(const std::string& v) {
+        m_error = v;
+    }
 
-    const std::string& getError() const { return m_error;}
-    void setError(const std::string& v) { m_error = v;}
+    void setUsed(int32_t v) {
+        m_used = v;
+    }
+    int32_t getUsed() const {
+        return m_used;
+    }
 
-    void setUsed(int32_t v) { m_used = v;}
-    int32_t getUsed() const { return m_used;}
+    http::HttpResponse::ptr getResponse() const {
+        return m_response;
+    }
+    void setResponse(http::HttpResponse::ptr v) {
+        m_response = v;
+    }
 
-    http::HttpResponse::ptr getResponse() const { return m_response;}
-    void setResponse(http::HttpResponse::ptr v) { m_response = v;}
-
-    GrpcMessage::ptr getData() const { return m_data;}
-    void setData(GrpcMessage::ptr v) { m_data = v;}
+    GrpcMessage::ptr getData() const {
+        return m_data;
+    }
+    void setData(GrpcMessage::ptr v) {
+        m_data = v;
+    }
 
     std::string toString() const;
 
-    template<class T>
+    template <class T>
     std::shared_ptr<T> getAsPB() const {
-        if(!m_data) {
+        if (!m_data) {
             return nullptr;
         }
         try {
             std::shared_ptr<T> data = std::make_shared<T>();
-            if(data->ParseFromString(m_data->data)) {
+            if (data->ParseFromString(m_data->data)) {
                 return data;
             }
         } catch (...) {
@@ -99,7 +127,8 @@ public:
     }
 
     bool setAsPB(const google::protobuf::Message& msg);
-private:
+
+   private:
     int m_result = 0;
     int m_used = 0;
     std::string m_error;
@@ -107,7 +136,7 @@ private:
     GrpcMessage::ptr m_data;
 };
 
-}
-}
+}  // namespace grpc
+}  // namespace sylar
 
 #endif

@@ -25,6 +25,7 @@
 #if WITH_KAFKA
 #include "kafka_client.h"
 #endif
+#include "db/db.h"
 #include "library.h"
 #include "log.h"
 #include "macro.h"
@@ -42,8 +43,6 @@
 #include "uri.h"
 #include "util.h"
 #include "worker.h"
-
-#include "db/db.h"
 #if WITH_MYSQL
 #include "db/mysql.h"
 #endif
@@ -59,20 +58,18 @@
 #endif
 
 #include "ds/bitmap.h"
-#include "ds/roaring_bitmap.h"
 #include "ds/blocking_queue.h"
 #include "ds/cache_status.h"
-#include "ds/lru_cache.h"
+#include "ds/dict.h"
 #include "ds/fifo_cache.h"
-#include "ds/timed_cache.h"
-#include "ds/timed_lru_cache.h"
 #include "ds/hash_map.h"
 #include "ds/hash_multimap.h"
-#include "ds/dict.h"
-
+#include "ds/lru_cache.h"
+#include "ds/roaring_bitmap.h"
+#include "ds/timed_cache.h"
+#include "ds/timed_lru_cache.h"
 #include "email/email.h"
 #include "email/smtp.h"
-
 #include "http/http.h"
 #include "http/http11_common.h"
 #include "http/http11_parser.h"
@@ -87,16 +84,13 @@
 #include "http/ws_server.h"
 #include "http/ws_servlet.h"
 #include "http/ws_session.h"
-
 #include "rock/rock_protocol.h"
 #include "rock/rock_server.h"
 #include "rock/rock_stream.h"
-
 #include "streams/async_socket_stream.h"
 #include "streams/load_balance.h"
 #include "streams/socket_stream.h"
 #include "streams/zlib_stream.h"
-
 #include "util/crypto_util.h"
 #include "util/hash_util.h"
 #include "util/json_util.h"

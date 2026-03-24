@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <string>
+
 #include "tinyxml2.h"
 
 namespace sylar {
@@ -10,8 +11,9 @@ namespace orm {
 
 class Table;
 class Column {
-friend class Table;
-public:
+    friend class Table;
+
+   public:
     typedef std::shared_ptr<Column> ptr;
     enum Type {
         TYPE_NULL = 0,
@@ -31,16 +33,28 @@ public:
         TYPE_TIMESTAMP
     };
 
-    const std::string& getName() const { return m_name;}
-    const std::string& getType() const { return m_type;}
-    const std::string& getDesc() const { return m_desc;}
-    const std::string& getDefault() const { return m_default;}
+    const std::string& getName() const {
+        return m_name;
+    }
+    const std::string& getType() const {
+        return m_type;
+    }
+    const std::string& getDesc() const {
+        return m_desc;
+    }
+    const std::string& getDefault() const {
+        return m_default;
+    }
 
     std::string getDefaultValueString();
     std::string getSQLite3Default();
 
-    bool isAutoIncrement() const { return m_autoIncrement;}
-    Type getDType() const { return m_dtype;}
+    bool isAutoIncrement() const {
+        return m_autoIncrement;
+    }
+    Type getDType() const {
+        return m_dtype;
+    }
 
     bool init(const tinyxml2::XMLElement& node);
 
@@ -48,19 +62,26 @@ public:
     std::string getGetFunDefine() const;
     std::string getSetFunDefine() const;
     std::string getSetFunImpl(const std::string& class_name, int idx) const;
-    int getIndex() const { return m_index;}
+    int getIndex() const {
+        return m_index;
+    }
 
     static Type ParseType(const std::string& v);
     static std::string TypeToString(Type type);
 
-    std::string getDTypeString() { return TypeToString(m_dtype);}
+    std::string getDTypeString() {
+        return TypeToString(m_dtype);
+    }
     std::string getSQLite3TypeString();
     std::string getMySQLTypeString();
 
     std::string getBindString();
     std::string getGetString();
-    const std::string& getUpdate() const { return m_update;}
-private:
+    const std::string& getUpdate() const {
+        return m_update;
+    }
+
+   private:
     std::string m_name;
     std::string m_type;
     std::string m_default;
@@ -73,7 +94,7 @@ private:
     int m_length;
 };
 
-}
-}
+}  // namespace orm
+}  // namespace sylar
 
 #endif

@@ -1,20 +1,20 @@
 #include "roaring_bitmap.h"
+
 #include <math.h>
 #include <string.h>
-#include <sstream>
+
 #include <iostream>
+#include <sstream>
+
 #include "sylar/log.h"
 #include "sylar/macro.h"
 
 namespace sylar {
 namespace ds {
 
-RoaringBitmap::RoaringBitmap(const Roaring& b)
-    :m_bitmap(b) {
-}
+RoaringBitmap::RoaringBitmap(const Roaring& b) : m_bitmap(b) {}
 
-RoaringBitmap::RoaringBitmap() {
-}
+RoaringBitmap::RoaringBitmap() {}
 
 RoaringBitmap::RoaringBitmap(uint32_t size) {
     m_bitmap.addRange(0, size);
@@ -24,8 +24,7 @@ RoaringBitmap::RoaringBitmap(const RoaringBitmap& b) {
     m_bitmap = b.m_bitmap;
 }
 
-RoaringBitmap::~RoaringBitmap() {
-}
+RoaringBitmap::~RoaringBitmap() {}
 
 void RoaringBitmap::writeTo(sylar::ByteArray::ptr ba) const {
     size_t size = m_bitmap.getSizeInBytes(false);
@@ -42,13 +41,13 @@ bool RoaringBitmap::readFrom(sylar::ByteArray::ptr ba) {
         ba->read(buffer.data(), size);
         m_bitmap = Roaring::read(buffer.data(), false);
         return true;
-    } catch(...) {
+    } catch (...) {
     }
     return false;
 }
 
 RoaringBitmap& RoaringBitmap::operator=(const RoaringBitmap& b) {
-    if(this == &b) {
+    if (this == &b) {
         return *this;
     }
     m_bitmap = b.m_bitmap;
@@ -60,8 +59,8 @@ RoaringBitmap& RoaringBitmap::operator&=(const RoaringBitmap& b) {
     return *this;
 }
 
-//RoaringBitmap& RoaringBitmap::operator~() {
-//}
+// RoaringBitmap& RoaringBitmap::operator~() {
+// }
 
 RoaringBitmap& RoaringBitmap::operator|=(const RoaringBitmap& b) {
     m_bitmap |= b.m_bitmap;
@@ -78,22 +77,22 @@ RoaringBitmap& RoaringBitmap::operator^=(const RoaringBitmap& b) {
     return *this;
 }
 
-bool RoaringBitmap::operator== (const RoaringBitmap& b) const {
-    if(this == &b) {
+bool RoaringBitmap::operator==(const RoaringBitmap& b) const {
+    if (this == &b) {
         return true;
     }
     return m_bitmap == b.m_bitmap;
 }
 
-bool RoaringBitmap::operator!= (const RoaringBitmap& b) const {
+bool RoaringBitmap::operator!=(const RoaringBitmap& b) const {
     return !(*this == b);
 }
 
-RoaringBitmap RoaringBitmap::operator& (const RoaringBitmap& b) {
+RoaringBitmap RoaringBitmap::operator&(const RoaringBitmap& b) {
     return RoaringBitmap(m_bitmap & b.m_bitmap);
 }
 
-RoaringBitmap RoaringBitmap::operator| (const RoaringBitmap& b) {
+RoaringBitmap RoaringBitmap::operator|(const RoaringBitmap& b) {
     return RoaringBitmap(m_bitmap | b.m_bitmap);
 }
 
@@ -107,9 +106,7 @@ RoaringBitmap RoaringBitmap::operator^(const RoaringBitmap& b) {
 
 std::string RoaringBitmap::toString() const {
     std::stringstream ss;
-    ss << "[RoaringBitmap count=" << getCount()
-       << " size=" << m_bitmap.getSizeInBytes()
-       << "]";
+    ss << "[RoaringBitmap count=" << getCount() << " size=" << m_bitmap.getSizeInBytes() << "]";
     return ss.str();
 }
 
@@ -118,14 +115,14 @@ bool RoaringBitmap::get(uint32_t idx) const {
 }
 
 void RoaringBitmap::set(uint32_t idx, bool v) {
-    if(v) {
+    if (v) {
         m_bitmap.add(idx);
     } else {
         m_bitmap.remove(idx);
     }
 }
 
-RoaringBitmap::ptr RoaringBitmap::compress() const{
+RoaringBitmap::ptr RoaringBitmap::compress() const {
     RoaringBitmap::ptr rt = std::make_shared<RoaringBitmap>(*this);
     rt->m_bitmap.shrinkToFit();
     rt->m_bitmap.runOptimize();
@@ -142,27 +139,24 @@ bool RoaringBitmap::any() const {
     return m_bitmap.begin() != m_bitmap.end();
 }
 
-void RoaringBitmap::foreach(std::function<bool(uint32_t)> cb) {
-    for(auto it = m_bitmap.begin();
-            it != m_bitmap.end(); ++it) {
-        if(!cb(*it)) {
+void RoaringBitmap::foreach (std::function<bool(uint32_t)> cb) {
+    for (auto it = m_bitmap.begin(); it != m_bitmap.end(); ++it) {
+        if (!cb(*it)) {
             break;
         }
     }
 }
 
 void RoaringBitmap::rforeach(std::function<bool(uint32_t)> cb) {
-    for(auto it = m_bitmap.rbegin();
-            it != m_bitmap.rend(); ++it) {
-        if(!cb(*it)) {
+    for (auto it = m_bitmap.rbegin(); it != m_bitmap.rend(); ++it) {
+        if (!cb(*it)) {
             break;
         }
     }
 }
 
 void RoaringBitmap::listPosAsc(std::vector<uint32_t>& pos) {
-    for(auto it = m_bitmap.begin();
-            it != m_bitmap.end(); ++it) {
+    for (auto it = m_bitmap.begin(); it != m_bitmap.end(); ++it) {
         pos.push_back(*it);
     }
 }
@@ -187,5 +181,5 @@ uint32_t RoaringBitmap::getCount() const {
     return m_bitmap.cardinality();
 }
 
-}
-}
+}  // namespace ds
+}  // namespace sylar

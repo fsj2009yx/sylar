@@ -1,4 +1,5 @@
 #include "thread.h"
+
 #include "log.h"
 #include "util.h"
 
@@ -18,42 +19,39 @@ const std::string& Thread::GetName() {
 }
 
 void Thread::SetName(const std::string& name) {
-    if(name.empty()) {
+    if (name.empty()) {
         return;
     }
-    if(t_thread) {
+    if (t_thread) {
         t_thread->m_name = name;
     }
     t_thread_name = name;
 }
 
-Thread::Thread(std::function<void()> cb, const std::string& name)
-    :m_cb(cb)
-    ,m_name(name) {
-    if(name.empty()) {
+Thread::Thread(std::function<void()> cb, const std::string& name) : m_cb(cb), m_name(name) {
+    if (name.empty()) {
         m_name = "UNKNOW";
     }
     int rt = pthread_create(&m_thread, nullptr, &Thread::run, this);
-    if(rt) {
-        SYLAR_LOG_ERROR(g_logger) << "pthread_create thread fail, rt=" << rt
-            << " name=" << name;
+    if (rt) {
+        SYLAR_LOG_ERROR(g_logger) << "pthread_create thread fail, rt=" << rt << " name=" << name;
         throw std::logic_error("pthread_create error");
     }
     m_semaphore.wait();
 }
 
 Thread::~Thread() {
-    if(m_thread) {
+    if (m_thread) {
         pthread_detach(m_thread);
     }
 }
 
 void Thread::join() {
-    if(m_thread) {
+    if (m_thread) {
         int rt = pthread_join(m_thread, nullptr);
-        if(rt) {
-            SYLAR_LOG_ERROR(g_logger) << "pthread_join thread fail, rt=" << rt
-                << " name=" << m_name;
+        if (rt) {
+            SYLAR_LOG_ERROR(g_logger)
+                << "pthread_join thread fail, rt=" << rt << " name=" << m_name;
             throw std::logic_error("pthread_join error");
         }
         m_thread = 0;
@@ -76,4 +74,4 @@ void* Thread::run(void* arg) {
     return 0;
 }
 
-}
+}  // namespace sylar

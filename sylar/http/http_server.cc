@@ -1,6 +1,7 @@
 #include "http_server.h"
-#include "sylar/log.h"
+
 #include "sylar/http/servlets/config_servlet.h"
+#include "sylar/log.h"
 #ifdef WITH_PROMETHEUS
 #include "sylar/http/servlets/metrics_servlet.h"
 #endif
@@ -14,12 +15,9 @@ namespace http {
 
 static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
-HttpServer::HttpServer(bool keepalive
-               ,sylar::IOManager* worker
-               ,sylar::IOManager* io_worker
-               ,sylar::IOManager* accept_worker)
-    :TcpServer(worker, io_worker, accept_worker)
-    ,m_isKeepalive(keepalive) {
+HttpServer::HttpServer(bool keepalive, sylar::IOManager* worker, sylar::IOManager* io_worker,
+                       sylar::IOManager* accept_worker)
+    : TcpServer(worker, io_worker, accept_worker), m_isKeepalive(keepalive) {
     m_dispatch = std::make_shared<ServletDispatch>();
 
     m_type = "http";
@@ -40,37 +38,37 @@ void HttpServer::setName(const std::string& v) {
 
 void HttpServer::handleClient(Socket::ptr client) {
     SYLAR_LOG_DEBUG(g_logger) << "handleClient " << *client;
-    //sylar::TimeCalc tc;
+    // sylar::TimeCalc tc;
     HttpSession::ptr session = std::make_shared<HttpSession>(client);
     do {
         auto req = session->recvRequest();
-        //tc.tick("recv");
-        if(!req) {
-            SYLAR_LOG_DEBUG(g_logger) << "recv http request fail, errno="
-                << errno << " errstr=" << strerror(errno)
+        // tc.tick("recv");
+        if (!req) {
+            SYLAR_LOG_DEBUG(g_logger)
+                << "recv http request fail, errno=" << errno << " errstr=" << strerror(errno)
                 << " cliet:" << *client << " keep_alive=" << m_isKeepalive;
             break;
         }
 
-        HttpResponse::ptr rsp = std::make_shared<HttpResponse>(req->getVersion()
-                            ,req->isClose() || !m_isKeepalive);
+        HttpResponse::ptr rsp =
+            std::make_shared<HttpResponse>(req->getVersion(), req->isClose() || !m_isKeepalive);
         rsp->setHeader("Server", getName());
         rsp->setHeader("Content-Type", "application/json;charset=utf8");
         {
             sylar::SchedulerSwitcher sw(m_worker);
             m_dispatch->handle(req, rsp, session);
         }
-        //tc.tick("handler");
+        // tc.tick("handler");
         session->sendResponse(rsp);
-        //tc.tick("response");
-        //SYLAR_LOG_ERROR(g_logger) << "elapse=" << tc.elapse() << " - " << tc.toString();
+        // tc.tick("response");
+        // SYLAR_LOG_ERROR(g_logger) << "elapse=" << tc.elapse() << " - " << tc.toString();
 
-        if(!m_isKeepalive || req->isClose()) {
+        if (!m_isKeepalive || req->isClose()) {
             break;
         }
-    } while(true);
+    } while (true);
     session->close();
 }
 
-}
-}
+}  // namespace http
+}  // namespace sylar

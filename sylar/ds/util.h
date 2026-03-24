@@ -1,30 +1,29 @@
 #ifndef __SYLAR_DS_UTIL_H__
 #define __SYLAR_DS_UTIL_H__
 
-#include "sylar/util.h"
 #include <math.h>
+
 #include <vector>
+
+#include "sylar/util.h"
 
 namespace sylar {
 namespace ds {
 
-template<class T, uint32_t seed = 1009150517>
+template <class T, uint32_t seed = 1009150517>
 class Murmur3Hash {
-public:
+   public:
     uint32_t operator()(const T& data) {
         return sylar::murmur3_hash(&data, sizeof(T), seed);
     }
 };
 
-template<class K, class V>
+template <class K, class V>
 struct Pair {
     K first;
     V second;
 
-    Pair(const K& k = K(), const V& v = V())
-        :first(k)
-        ,second(v) {
-    }
+    Pair(const K& k = K(), const V& v = V()) : first(k), second(v) {}
 
     bool operator==(const Pair<K, V>& o) const {
         return first == o.first;
@@ -35,15 +34,12 @@ struct Pair {
     }
 };
 
-template<class K, class V>
+template <class K, class V>
 struct MultiPair {
     K first;
     V second;
 
-    MultiPair(const K& k = K(), const V& v = V())
-        :first(k)
-        ,second(v) {
-    }
+    MultiPair(const K& k = K(), const V& v = V()) : first(k), second(v) {}
 
     bool operator==(const Pair<K, V>& o) const {
         return memcmp(this, &o, sizeof(MultiPair<K, V>)) == 0;
@@ -54,10 +50,9 @@ struct MultiPair {
     }
 };
 
-
-template<class K, class V, uint32_t seed>
+template <class K, class V, uint32_t seed>
 class Murmur3Hash<Pair<K, V>, seed> {
-public:
+   public:
     typedef Murmur3Hash<K, seed> KeyHashType;
     uint32_t operator()(const Pair<K, V>& data) {
         return hash(data.first);
@@ -66,81 +61,80 @@ public:
     KeyHashType hash;
 };
 
-template<uint32_t seed>
+template <uint32_t seed>
 class Murmur3Hash<int32_t, seed> {
-public:
+   public:
     uint32_t operator()(const int& data) {
         return data;
     }
 };
 
-template<uint32_t seed>
+template <uint32_t seed>
 class Murmur3Hash<uint32_t, seed> {
-public:
+   public:
     uint32_t operator()(const uint32_t& data) {
         return data;
     }
 };
 
-template<uint32_t seed>
+template <uint32_t seed>
 class Murmur3Hash<int64_t, seed> {
-public:
+   public:
     uint32_t operator()(const int64_t& data) {
         return data;
     }
 };
 
-template<uint32_t seed>
+template <uint32_t seed>
 class Murmur3Hash<uint64_t, seed> {
-public:
+   public:
     uint32_t operator()(const uint64_t& data) {
         return data;
     }
 };
 
-template<uint32_t seed>
+template <uint32_t seed>
 class Murmur3Hash<std::string, seed> {
-public:
+   public:
     uint32_t operator()(const std::string& data) {
         return sylar::murmur3_hash(data.data(), data.size(), seed);
     }
 };
 
-template<class T, uint32_t seed>
+template <class T, uint32_t seed>
 class Murmur3Hash<std::vector<T>, seed> {
-public:
+   public:
     uint32_t operator()(const std::vector<T>& data) {
         return sylar::murmur3_hash(&data[0], data.size() * sizeof(T), seed);
     }
 };
 
-
-template<class T, uint32_t seed = 1060627423>
+template <class T, uint32_t seed = 1060627423>
 class Murmur3Hash64 {
-public:
+   public:
     uint64_t operator()(const T& data) {
         return sylar::murmur3_hash64(&data, sizeof(T), seed);
     }
 };
 
-template<uint32_t seed>
+template <uint32_t seed>
 class Murmur3Hash64<std::string, seed> {
-public:
+   public:
     uint64_t operator()(const std::string& data) {
         return sylar::murmur3_hash64(data.data(), data.size(), seed);
     }
 };
 
-template<class T, uint32_t seed>
+template <class T, uint32_t seed>
 class Murmur3Hash64<std::vector<T>, seed> {
-public:
+   public:
     uint32_t operator()(const std::vector<T>& data) {
         return sylar::murmur3_hash64(&data[0], data.size() * sizeof(T), seed);
     }
 };
 
 class PrimeGenerator {
-public:
+   public:
     PrimeGenerator();
     uint32_t upperValue(uint32_t v, uint32_t skip = 0);
     uint32_t getValue();
@@ -152,29 +146,26 @@ public:
 
     uint32_t getIndex() const;
     void setIndex(uint32_t idx);
-private:
+
+   private:
     const uint32_t* m_cur;
 };
 
 class RandomStringGenerator {
-public:
+   public:
     static std::string Gen(uint32_t size = 10);
 };
 
-template<class K, class V>
+template <class K, class V>
 struct Ivt {
     K id;
     int count;
     V* data;
 
-    Ivt()
-        :id()
-        ,count(0)
-        ,data(nullptr) {
-    }
+    Ivt() : id(), count(0), data(nullptr) {}
 
     inline void convert(const V* v) {
-        if(!count) {
+        if (!count) {
             data = nullptr;
         } else {
             data = (V*)v + (size_t)data / sizeof(V);
@@ -182,7 +173,7 @@ struct Ivt {
     }
 
     inline void convert(const size_t& offset) {
-        if(!count) {
+        if (!count) {
             data = nullptr;
         } else {
             data = (V*)offset;
@@ -200,7 +191,7 @@ struct Ivt {
 
     inline void duplicate(const V* v, const int& cnt) {
         count = cnt;
-        if(!count) {
+        if (!count) {
             data = nullptr;
         } else {
             data = new V[count]();
@@ -210,38 +201,37 @@ struct Ivt {
 
     inline void free() {
         count = 0;
-        if(!data) {
+        if (!data) {
             return;
         }
-        delete [] data;
+        delete[] data;
         data = nullptr;
     }
 };
 
-
-inline int basket(const int &  n) {
+inline int basket(const int& n) {
     return 1 << std::min((int)(floor(log2(abs(n))) + 1), 30);
 }
 
-template<class T, class V>
+template <class T, class V>
 T BinarySearch(const T& begin, const T& end, const V& v) {
     auto tmp = std::lower_bound(begin, end, v);
-    if(tmp == end) {
+    if (tmp == end) {
         return tmp;
     }
-    if(!(v < *tmp)) {
+    if (!(v < *tmp)) {
         return tmp;
     }
     return end;
 }
 
-template<class T>
+template <class T>
 void SortLast(const T& data, const int& size) {
-    if(size <= 1) {
+    if (size <= 1) {
         return;
     }
-    for(int i = size - 2; i >= 0; --i) {
-        if(data[i + 1] < data[i]) {
+    for (int i = size - 2; i >= 0; --i) {
+        if (data[i + 1] < data[i]) {
             std::swap(data[i + 1], data[i]);
         } else {
             break;
@@ -249,7 +239,7 @@ void SortLast(const T& data, const int& size) {
     }
 }
 
-}
-}
+}  // namespace ds
+}  // namespace sylar
 
 #endif

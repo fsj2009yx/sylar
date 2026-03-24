@@ -1,9 +1,12 @@
 #include "prometheus.h"
+
 #include <prometheus/text_serializer.h>
+
 #include <sstream>
+
+#include "sylar/http/http_connection.h"
 #include "sylar/iomanager.h"
 #include "sylar/log.h"
-#include "sylar/http/http_connection.h"
 
 namespace sylar {
 
@@ -13,14 +16,17 @@ PrometheusRegistry::PrometheusRegistry() {
     m_register = std::make_shared<prometheus::Registry>();
 }
 
-prometheus::Family<prometheus::Counter>* PrometheusRegistry::addCounter(const std::string& name, const std::string& help, const std::map<std::string, std::string>& labels) {
+prometheus::Family<prometheus::Counter>* PrometheusRegistry::addCounter(
+    const std::string& name, const std::string& help,
+    const std::map<std::string, std::string>& labels) {
     sylar::RWMutex::ReadLock lock(m_mutex);
     auto it = m_counters.find(name);
-    if(it != m_counters.end()) {
+    if (it != m_counters.end()) {
         return it->second;
     }
     lock.unlock();
-    auto rt = &prometheus::BuildCounter().Name(name).Help(help).Labels(labels).Register(*m_register);
+    auto rt =
+        &prometheus::BuildCounter().Name(name).Help(help).Labels(labels).Register(*m_register);
     {
         sylar::RWMutex::WriteLock lock(m_mutex);
         m_counters[name] = rt;
@@ -29,10 +35,12 @@ prometheus::Family<prometheus::Counter>* PrometheusRegistry::addCounter(const st
     return rt;
 }
 
-prometheus::Family<prometheus::Gauge>* PrometheusRegistry::addGauge(const std::string& name, const std::string& help, const std::map<std::string, std::string>& labels) {
+prometheus::Family<prometheus::Gauge>* PrometheusRegistry::addGauge(
+    const std::string& name, const std::string& help,
+    const std::map<std::string, std::string>& labels) {
     sylar::RWMutex::ReadLock lock(m_mutex);
     auto it = m_gauges.find(name);
-    if(it != m_gauges.end()) {
+    if (it != m_gauges.end()) {
         return it->second;
     }
     lock.unlock();
@@ -45,14 +53,17 @@ prometheus::Family<prometheus::Gauge>* PrometheusRegistry::addGauge(const std::s
     return rt;
 }
 
-prometheus::Family<prometheus::Histogram>* PrometheusRegistry::addHistogram(const std::string& name, const std::string& help, const std::map<std::string, std::string>& labels) {
+prometheus::Family<prometheus::Histogram>* PrometheusRegistry::addHistogram(
+    const std::string& name, const std::string& help,
+    const std::map<std::string, std::string>& labels) {
     sylar::RWMutex::ReadLock lock(m_mutex);
     auto it = m_histograms.find(name);
-    if(it != m_histograms.end()) {
+    if (it != m_histograms.end()) {
         return it->second;
     }
     lock.unlock();
-    auto rt = &prometheus::BuildHistogram().Name(name).Help(help).Labels(labels).Register(*m_register);
+    auto rt =
+        &prometheus::BuildHistogram().Name(name).Help(help).Labels(labels).Register(*m_register);
     {
         sylar::RWMutex::WriteLock lock(m_mutex);
         m_histograms[name] = rt;
@@ -61,14 +72,17 @@ prometheus::Family<prometheus::Histogram>* PrometheusRegistry::addHistogram(cons
     return rt;
 }
 
-prometheus::Family<prometheus::Summary>* PrometheusRegistry::addSummary(const std::string& name, const std::string& help, const std::map<std::string, std::string>& labels) {
+prometheus::Family<prometheus::Summary>* PrometheusRegistry::addSummary(
+    const std::string& name, const std::string& help,
+    const std::map<std::string, std::string>& labels) {
     sylar::RWMutex::ReadLock lock(m_mutex);
     auto it = m_summarys.find(name);
-    if(it != m_summarys.end()) {
+    if (it != m_summarys.end()) {
         return it->second;
     }
     lock.unlock();
-    auto rt = &prometheus::BuildSummary().Name(name).Help(help).Labels(labels).Register(*m_register);
+    auto rt =
+        &prometheus::BuildSummary().Name(name).Help(help).Labels(labels).Register(*m_register);
     {
         sylar::RWMutex::WriteLock lock(m_mutex);
         m_summarys[name] = rt;
@@ -77,18 +91,19 @@ prometheus::Family<prometheus::Summary>* PrometheusRegistry::addSummary(const st
     return rt;
 }
 
-prometheus::Counter* PrometheusRegistry::addCounterLabels(const std::string& name, const std::map<std::string, std::string>& labels) {
+prometheus::Counter* PrometheusRegistry::addCounterLabels(
+    const std::string& name, const std::map<std::string, std::string>& labels) {
     sylar::RWMutex::WriteLock lock(m_mutex);
     auto it = m_counterLabels.find(name);
-    if(it == m_counterLabels.end()) {
+    if (it == m_counterLabels.end()) {
         return nullptr;
     }
     auto iit = it->second.find(labels);
-    if(iit != it->second.end()) {
+    if (iit != it->second.end()) {
         return iit->second;
     }
     auto xit = m_counters.find(name);
-    if(xit == m_counters.end()) {
+    if (xit == m_counters.end()) {
         return nullptr;
     }
     auto rt = &xit->second->Add(labels);
@@ -100,18 +115,19 @@ prometheus::Counter* PrometheusRegistry::addCounterLabels(const std::string& nam
     return rt;
 }
 
-prometheus::Gauge* PrometheusRegistry::addGaugeLabels(const std::string& name, const std::map<std::string, std::string>& labels) {
+prometheus::Gauge* PrometheusRegistry::addGaugeLabels(
+    const std::string& name, const std::map<std::string, std::string>& labels) {
     sylar::RWMutex::ReadLock lock(m_mutex);
     auto it = m_gaugeLabels.find(name);
-    if(it == m_gaugeLabels.end()) {
+    if (it == m_gaugeLabels.end()) {
         return nullptr;
     }
     auto iit = it->second.find(labels);
-    if(iit != it->second.end()) {
+    if (iit != it->second.end()) {
         return iit->second;
     }
     auto xit = m_gauges.find(name);
-    if(xit == m_gauges.end()) {
+    if (xit == m_gauges.end()) {
         return nullptr;
     }
     auto rt = &xit->second->Add(labels);
@@ -123,18 +139,20 @@ prometheus::Gauge* PrometheusRegistry::addGaugeLabels(const std::string& name, c
     return rt;
 }
 
-prometheus::Histogram* PrometheusRegistry::addHistogramLabels(const std::string& name, const std::map<std::string, std::string>& labels, const std::vector<double>& buckets) {
+prometheus::Histogram* PrometheusRegistry::addHistogramLabels(
+    const std::string& name, const std::map<std::string, std::string>& labels,
+    const std::vector<double>& buckets) {
     sylar::RWMutex::ReadLock lock(m_mutex);
     auto it = m_histogramLabels.find(name);
-    if(it == m_histogramLabels.end()) {
+    if (it == m_histogramLabels.end()) {
         return nullptr;
     }
     auto iit = it->second.find(labels);
-    if(iit != it->second.end()) {
+    if (iit != it->second.end()) {
         return iit->second;
     }
     auto xit = m_histograms.find(name);
-    if(xit == m_histograms.end()) {
+    if (xit == m_histograms.end()) {
         return nullptr;
     }
     auto rt = &xit->second->Add(labels, buckets);
@@ -146,18 +164,20 @@ prometheus::Histogram* PrometheusRegistry::addHistogramLabels(const std::string&
     return rt;
 }
 
-prometheus::Summary* PrometheusRegistry::addSummaryLabels(const std::string& name, const std::map<std::string, std::string>& labels, const prometheus::Summary::Quantiles& quantiles) {
+prometheus::Summary* PrometheusRegistry::addSummaryLabels(
+    const std::string& name, const std::map<std::string, std::string>& labels,
+    const prometheus::Summary::Quantiles& quantiles) {
     sylar::RWMutex::ReadLock lock(m_mutex);
     auto it = m_summaryLabels.find(name);
-    if(it == m_summaryLabels.end()) {
+    if (it == m_summaryLabels.end()) {
         return nullptr;
     }
     auto iit = it->second.find(labels);
-    if(iit != it->second.end()) {
+    if (iit != it->second.end()) {
         return iit->second;
     }
     auto xit = m_summarys.find(name);
-    if(xit == m_summarys.end()) {
+    if (xit == m_summarys.end()) {
         return nullptr;
     }
     auto rt = &xit->second->Add(labels, quantiles);
@@ -166,7 +186,8 @@ prometheus::Summary* PrometheusRegistry::addSummaryLabels(const std::string& nam
         sylar::RWMutex::WriteLock lock(m_mutex);
         m_summaryLabels[name][labels] = rt;
     }
-    return rt;}
+    return rt;
+}
 
 std::string PrometheusRegistry::toString() const {
     prometheus::TextSerializer ts;
@@ -174,23 +195,18 @@ std::string PrometheusRegistry::toString() const {
 }
 
 bool PrometheusClientConfig::operator==(const PrometheusClientConfig& o) const {
-    return host == o.host
-        && port == o.port
-        && interval == o.interval
-        && job == o.job
-        && username == o.username
-        && password == o.password
-        && labels == o.labels;
+    return host == o.host && port == o.port && interval == o.interval && job == o.job &&
+           username == o.username && password == o.password && labels == o.labels;
 }
 
 PrometheusClient::PrometheusClient(const PrometheusClientConfig& config) {
     setConfig(config);
 }
 
-void PrometheusClient::addRegistry(const std::string& name, PrometheusRegistry::ptr data
-                                   ,const std::map<std::string, std::string>& labels) {
+void PrometheusClient::addRegistry(const std::string& name, PrometheusRegistry::ptr data,
+                                   const std::map<std::string, std::string>& labels) {
     std::stringstream lb;
-    for(auto& i : labels) {
+    for (auto& i : labels) {
         lb << "/" << i.first << "/" << i.second;
     }
     sylar::RWMutex::WriteLock lock(m_mutex);
@@ -211,7 +227,7 @@ void PrometheusClient::delRegistry(const std::string& name) {
 void PrometheusClient::setConfig(const PrometheusClientConfig& v) {
     m_config = v;
     std::stringstream ss;
-    for(auto& i : v.labels) {
+    for (auto& i : v.labels) {
         ss << "/" << i.first << "/" << i.second;
     }
     m_labels = ss.str();
@@ -233,7 +249,7 @@ void PrometheusClient::push() {
     auto infos = m_infos;
     lock.unlock();
 
-    for(auto& i : infos) {
+    for (auto& i : infos) {
         auto uri = getUri(i.second.second);
         auto str = i.second.first->toString();
 
@@ -250,12 +266,12 @@ void PrometheusClient::push() {
 
 void PrometheusClient::start() {
     auto self = shared_from_this();
-    sylar::IOManager::GetThis()->schedule([self, this](){
-        while(true) {
+    sylar::IOManager::GetThis()->schedule([self, this]() {
+        while (true) {
             push();
             sleep(m_config.interval);
         }
     });
 }
 
-}
+}  // namespace sylar

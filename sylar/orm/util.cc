@@ -1,4 +1,5 @@
 #include "util.h"
+
 #include "sylar/util.h"
 
 namespace sylar {
@@ -11,7 +12,7 @@ std::string GetAsVariable(const std::string& v) {
 std::string GetAsClassName(const std::string& v) {
     auto vs = sylar::split(v, '_');
     std::stringstream ss;
-    for(auto& i : vs) {
+    for (auto& i : vs) {
         i[0] = toupper(i[0]);
         ss << i;
     }
@@ -44,5 +45,5 @@ std::string GetAsDefineMacro(const std::string& v) {
     return "__" + tmp + "__";
 }
 
-}
-}
+}  // namespace orm
+}  // namespace sylar

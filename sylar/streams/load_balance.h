@@ -1,34 +1,62 @@
 #ifndef __SYLAR_STREAMS_SOCKET_STREAM_POOL_H__
 #define __SYLAR_STREAMS_SOCKET_STREAM_POOL_H__
 
-#include "sylar/streams/socket_stream.h"
-#include "sylar/mutex.h"
-#include "sylar/util.h"
-#include "sylar/streams/service_discovery.h"
-#include <vector>
 #include <unordered_map>
+#include <vector>
+
+#include "sylar/mutex.h"
+#include "sylar/streams/service_discovery.h"
+#include "sylar/streams/socket_stream.h"
+#include "sylar/util.h"
 
 namespace sylar {
 
 class HolderStatsSet;
 class HolderStats {
-friend class HolderStatsSet;
-public:
-    uint32_t getUsedTime() const { return m_usedTime; }
-    uint32_t getTotal() const { return m_total; }
-    uint32_t getDoing() const { return m_doing; }
-    uint32_t getTimeouts() const { return m_timeouts; }
-    uint32_t getOks() const { return m_oks; }
-    uint32_t getErrs() const { return m_errs; }
+    friend class HolderStatsSet;
 
-    uint32_t incUsedTime(uint32_t v) { return sylar::Atomic::addFetch(m_usedTime ,v);}
-    uint32_t incTotal(uint32_t v) { return sylar::Atomic::addFetch(m_total, v);}
-    uint32_t incDoing(uint32_t v) { return sylar::Atomic::addFetch(m_doing, v);}
-    uint32_t incTimeouts(uint32_t v) { return sylar::Atomic::addFetch(m_timeouts, v);}
-    uint32_t incOks(uint32_t v) { return sylar::Atomic::addFetch(m_oks, v);}
-    uint32_t incErrs(uint32_t v) { return sylar::Atomic::addFetch(m_errs, v);}
+   public:
+    uint32_t getUsedTime() const {
+        return m_usedTime;
+    }
+    uint32_t getTotal() const {
+        return m_total;
+    }
+    uint32_t getDoing() const {
+        return m_doing;
+    }
+    uint32_t getTimeouts() const {
+        return m_timeouts;
+    }
+    uint32_t getOks() const {
+        return m_oks;
+    }
+    uint32_t getErrs() const {
+        return m_errs;
+    }
 
-    uint32_t decDoing(uint32_t v) { return sylar::Atomic::subFetch(m_doing, v);}
+    uint32_t incUsedTime(uint32_t v) {
+        return sylar::Atomic::addFetch(m_usedTime, v);
+    }
+    uint32_t incTotal(uint32_t v) {
+        return sylar::Atomic::addFetch(m_total, v);
+    }
+    uint32_t incDoing(uint32_t v) {
+        return sylar::Atomic::addFetch(m_doing, v);
+    }
+    uint32_t incTimeouts(uint32_t v) {
+        return sylar::Atomic::addFetch(m_timeouts, v);
+    }
+    uint32_t incOks(uint32_t v) {
+        return sylar::Atomic::addFetch(m_oks, v);
+    }
+    uint32_t incErrs(uint32_t v) {
+        return sylar::Atomic::addFetch(m_errs, v);
+    }
+
+    uint32_t decDoing(uint32_t v) {
+        return sylar::Atomic::subFetch(m_doing, v);
+    }
     void clear();
 
     float getWeight(float rate = 1.0f);
@@ -38,7 +66,8 @@ public:
     void add(const HolderStats& hs);
 
     uint64_t getWeight(const HolderStats& hs, uint64_t join_time);
-private:
+
+   private:
     uint32_t m_usedTime = 0;
     uint32_t m_total = 0;
     uint32_t m_doing = 0;
@@ -48,49 +77,68 @@ private:
 };
 
 class HolderStatsSet {
-public:
+   public:
     HolderStatsSet(uint32_t size = 5);
     HolderStats& get(const uint32_t& now = time(0));
 
     float getWeight(const uint32_t& now = time(0));
 
     HolderStats getTotal() const;
-private:
+
+   private:
     void init(const uint32_t& now);
-private:
-    uint32_t m_lastUpdateTime = 0; //seconds
+
+   private:
+    uint32_t m_lastUpdateTime = 0;  // seconds
     std::vector<HolderStats> m_stats;
 };
 
 class LoadBalanceItem {
-public:
+   public:
     typedef std::shared_ptr<LoadBalanceItem> ptr;
     virtual ~LoadBalanceItem() {}
 
-    SocketStream::ptr getStream() const { return m_stream;}
-    void setStream(SocketStream::ptr v) { m_stream = v;}
+    SocketStream::ptr getStream() const {
+        return m_stream;
+    }
+    void setStream(SocketStream::ptr v) {
+        m_stream = v;
+    }
 
-    void setId(uint64_t v) { m_id = v;}
-    uint64_t getId() const { return m_id;}
+    void setId(uint64_t v) {
+        m_id = v;
+    }
+    uint64_t getId() const {
+        return m_id;
+    }
 
     HolderStats& get(const uint32_t& now = time(0));
-    const HolderStatsSet& getStatsSet() const { return m_stats;}
+    const HolderStatsSet& getStatsSet() const {
+        return m_stats;
+    }
 
-    template<class T>
+    template <class T>
     std::shared_ptr<T> getStreamAs() {
         return std::dynamic_pointer_cast<T>(m_stream);
     }
 
-    virtual int32_t getWeight() { return m_weight;}
-    void setWeight(int32_t v) { m_weight = v;}
+    virtual int32_t getWeight() {
+        return m_weight;
+    }
+    void setWeight(int32_t v) {
+        m_weight = v;
+    }
 
     virtual bool isValid();
     void close();
 
     std::string toString();
 
-    uint64_t getDiscoveryTime() const { return m_discoveryTime;}
-protected:
+    uint64_t getDiscoveryTime() const {
+        return m_discoveryTime;
+    }
+
+   protected:
     uint64_t m_id = 0;
     SocketStream::ptr m_stream;
     HolderStatsSet m_stats;
@@ -99,13 +147,8 @@ protected:
 };
 
 class ILoadBalance {
-public:
-    enum Type {
-        UNKNOW = 0,
-        ROUNDROBIN = 1,
-        WEIGHT = 2,
-        FAIR = 3
-    };
+   public:
+    enum Type { UNKNOW = 0, ROUNDROBIN = 1, WEIGHT = 2, FAIR = 3 };
 
     enum Error {
         NO_SERVICE = -101,
@@ -117,7 +160,7 @@ public:
 };
 
 class LoadBalance : public ILoadBalance {
-public:
+   public:
     typedef sylar::RWSpinlock RWMutexType;
     typedef std::shared_ptr<LoadBalance> ptr;
     void add(LoadBalanceItem::ptr v);
@@ -125,68 +168,75 @@ public:
     void set(const std::vector<LoadBalanceItem::ptr>& vs);
 
     LoadBalanceItem::ptr getById(uint64_t id);
-    void update(const std::unordered_map<uint64_t, LoadBalanceItem::ptr>& adds
-                ,std::unordered_map<uint64_t, LoadBalanceItem::ptr>& dels);
+    void update(const std::unordered_map<uint64_t, LoadBalanceItem::ptr>& adds,
+                std::unordered_map<uint64_t, LoadBalanceItem::ptr>& dels);
     void init();
 
     std::string statusString(const std::string& prefix);
 
     void checkInit();
-protected:
+
+   protected:
     virtual void initNolock() = 0;
-protected:
+
+   protected:
     RWMutexType m_mutex;
     std::unordered_map<uint64_t, LoadBalanceItem::ptr> m_datas;
     uint64_t m_lastInitTime = 0;
 };
 
 class RoundRobinLoadBalance : public LoadBalance {
-public:
+   public:
     typedef std::shared_ptr<RoundRobinLoadBalance> ptr;
     virtual LoadBalanceItem::ptr get(uint64_t v = -1) override;
-protected:
+
+   protected:
     virtual void initNolock();
-protected:
+
+   protected:
     std::vector<LoadBalanceItem::ptr> m_items;
 };
 
 ////class FairLoadBalance;
-//class FairLoadBalanceItem : public LoadBalanceItem {
+// class FairLoadBalanceItem : public LoadBalanceItem {
 ////friend class FairLoadBalance;
-//public:
-//    typedef std::shared_ptr<FairLoadBalanceItem> ptr;
+// public:
+//     typedef std::shared_ptr<FairLoadBalanceItem> ptr;
 //
-//    void clear();
-//    virtual int32_t getWeight();
-//};
+//     void clear();
+//     virtual int32_t getWeight();
+// };
 
 class WeightLoadBalance : public LoadBalance {
-public:
+   public:
     typedef std::shared_ptr<WeightLoadBalance> ptr;
     virtual LoadBalanceItem::ptr get(uint64_t v = -1) override;
-protected:
+
+   protected:
     virtual void initNolock();
-private:
+
+   private:
     int32_t getIdx(uint64_t v = -1);
-protected:
+
+   protected:
     std::vector<LoadBalanceItem::ptr> m_items;
     std::vector<int64_t> m_weights;
 };
 
-
-
 class FairLoadBalance : public WeightLoadBalance {
-public:
+   public:
     typedef std::shared_ptr<FairLoadBalance> ptr;
-protected:
+
+   protected:
     virtual void initNolock();
 };
 
 class SDLoadBalance {
-public:
+   public:
     typedef std::shared_ptr<SDLoadBalance> ptr;
-    typedef std::function<SocketStream::ptr(const std::string& domain
-                ,const std::string& service, ServiceItemInfo::ptr)> stream_callback;
+    typedef std::function<SocketStream::ptr(const std::string& domain, const std::string& service,
+                                            ServiceItemInfo::ptr)>
+        stream_callback;
     typedef sylar::RWSpinlock RWMutexType;
 
     SDLoadBalance(IServiceDiscovery::ptr sd);
@@ -197,45 +247,54 @@ public:
     virtual bool doQuery();
     virtual bool doRegister();
 
-    stream_callback getCb() const { return m_cb;}
-    void setCb(stream_callback v) { m_cb = v;}
+    stream_callback getCb() const {
+        return m_cb;
+    }
+    void setCb(stream_callback v) {
+        m_cb = v;
+    }
 
-    LoadBalance::ptr get(const std::string& domain, const std::string& service, bool auto_create = false);
+    LoadBalance::ptr get(const std::string& domain, const std::string& service,
+                         bool auto_create = false);
 
-    void initConf(const std::unordered_map<std::string, std::unordered_map<std::string, std::string> >& confs);
+    void initConf(const std::unordered_map<std::string,
+                                           std::unordered_map<std::string, std::string> >& confs);
 
     std::string statusString();
 
-    template<class Conn>
-    std::shared_ptr<Conn> getConnAs(const std::string& domain, const std::string& service, uint32_t idx = -1) {
+    template <class Conn>
+    std::shared_ptr<Conn> getConnAs(const std::string& domain, const std::string& service,
+                                    uint32_t idx = -1) {
         auto lb = get(domain, service);
-        if(!lb) {
+        if (!lb) {
             return nullptr;
         }
         auto conn = lb->get(idx);
-        if(!conn) {
+        if (!conn) {
             return nullptr;
         }
         return conn->getStreamAs<Conn>();
     }
-private:
-    void onServiceChange(const std::string& domain, const std::string& service
-                ,const std::unordered_map<uint64_t, ServiceItemInfo::ptr>& old_value
-                ,const std::unordered_map<uint64_t, ServiceItemInfo::ptr>& new_value);
+
+   private:
+    void onServiceChange(const std::string& domain, const std::string& service,
+                         const std::unordered_map<uint64_t, ServiceItemInfo::ptr>& old_value,
+                         const std::unordered_map<uint64_t, ServiceItemInfo::ptr>& new_value);
 
     ILoadBalance::Type getType(const std::string& domain, const std::string& service);
     LoadBalance::ptr createLoadBalance(ILoadBalance::Type type);
     LoadBalanceItem::ptr createLoadBalanceItem(ILoadBalance::Type type);
 
-private:
+   private:
     void refresh();
-protected:
+
+   protected:
     RWMutexType m_mutex;
     IServiceDiscovery::ptr m_sd;
-    //domain -> [ service -> [ LoadBalance ] ]
+    // domain -> [ service -> [ LoadBalance ] ]
     std::unordered_map<std::string, std::unordered_map<std::string, LoadBalance::ptr> > m_datas;
     std::unordered_map<std::string, std::unordered_map<std::string, ILoadBalance::Type> > m_types;
-    //ILoadBalance::Type m_defaultType = ILoadBalance::FAIR;
+    // ILoadBalance::Type m_defaultType = ILoadBalance::FAIR;
     stream_callback m_cb;
 
     sylar::Timer::ptr m_timer;
@@ -243,6 +302,6 @@ protected:
     bool m_isRefresh = false;
 };
 
-}
+}  // namespace sylar
 
 #endif

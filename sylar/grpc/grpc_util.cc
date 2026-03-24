@@ -1,4 +1,5 @@
 #include "grpc_util.h"
+
 #include "sylar/bytearray.h"
 #include "sylar/streams/zlib_stream.h"
 
@@ -7,7 +8,7 @@ namespace grpc {
 
 bool DecodeGrpcBody(const std::string& body, std::string& data, const std::string& encoding) {
     GrpcMessage tmp;
-    if(!DecodeGrpcBody(body, tmp, encoding)) {
+    if (!DecodeGrpcBody(body, tmp, encoding)) {
         return false;
     }
     data.swap(tmp.data);
@@ -19,7 +20,7 @@ bool DecodeGrpcBody(const std::string& body, GrpcMessage& data, const std::strin
     try {
         data.compressed = ba->readFuint8();
         data.length = ba->readFuint32();
-        if(data.compressed) {
+        if (data.compressed) {
             auto zs = sylar::ZlibStream::CreateGzip(false);
             zs->write(ba, ba->getReadSize());
             zs->close();
@@ -33,8 +34,9 @@ bool DecodeGrpcBody(const std::string& body, GrpcMessage& data, const std::strin
     return false;
 }
 
-bool EncodeGrpcBody(const std::string& data, std::string& body, bool compress, const std::string& encoding) {
-    if(compress) {
+bool EncodeGrpcBody(const std::string& data, std::string& body, bool compress,
+                    const std::string& encoding) {
+    if (compress) {
         sylar::ByteArray::ptr ba = std::make_shared<sylar::ByteArray>();
         ba->writeFuint8(1);
         auto zs = sylar::ZlibStream::CreateGzip(true);
@@ -55,5 +57,5 @@ bool EncodeGrpcBody(const std::string& data, std::string& body, bool compress, c
     return true;
 }
 
-}
-}
+}  // namespace grpc
+}  // namespace sylar

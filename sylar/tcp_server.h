@@ -9,16 +9,16 @@
 #ifndef __SYLAR_TCP_SERVER_H__
 #define __SYLAR_TCP_SERVER_H__
 
-#include <memory>
 #include <functional>
+#include <memory>
+
 #include "address.h"
-#include "iomanager.h"
-#include "socket.h"
-#include "noncopyable.h"
 #include "config.h"
+#include "iomanager.h"
+#include "noncopyable.h"
+#include "socket.h"
 
 namespace sylar {
-
 struct TcpServerConf {
     typedef std::shared_ptr<TcpServerConf> ptr;
 
@@ -42,25 +42,17 @@ struct TcpServerConf {
     }
 
     bool operator==(const TcpServerConf& oth) const {
-        return address == oth.address
-            && keepalive == oth.keepalive
-            && timeout == oth.timeout
-            && name == oth.name
-            && ssl == oth.ssl
-            && cert_file == oth.cert_file
-            && key_file == oth.key_file
-            && accept_worker == oth.accept_worker
-            && io_worker == oth.io_worker
-            && process_worker == oth.process_worker
-            && args == oth.args
-            && id == oth.id
-            && type == oth.type;
+        return address == oth.address && keepalive == oth.keepalive && timeout == oth.timeout &&
+               name == oth.name && ssl == oth.ssl && cert_file == oth.cert_file &&
+               key_file == oth.key_file && accept_worker == oth.accept_worker &&
+               io_worker == oth.io_worker && process_worker == oth.process_worker &&
+               args == oth.args && id == oth.id && type == oth.type;
     }
 };
 
-template<>
+template <>
 class LexicalCast<std::string, TcpServerConf> {
-public:
+   public:
     TcpServerConf operator()(const std::string& v) {
         YAML::Node node = YAML::Load(v);
         TcpServerConf conf;
@@ -75,10 +67,10 @@ public:
         conf.accept_worker = node["accept_worker"].as<std::string>();
         conf.io_worker = node["io_worker"].as<std::string>();
         conf.process_worker = node["process_worker"].as<std::string>();
-        conf.args = LexicalCast<std::string
-            ,std::map<std::string, std::string> >()(node["args"].as<std::string>(""));
-        if(node["address"].IsDefined()) {
-            for(size_t i = 0; i < node["address"].size(); ++i) {
+        conf.args = LexicalCast<std::string, std::map<std::string, std::string>>()(
+            node["args"].as<std::string>(""));
+        if (node["address"].IsDefined()) {
+            for (size_t i = 0; i < node["address"].size(); ++i) {
                 conf.address.push_back(node["address"][i].as<std::string>());
             }
         }
@@ -86,9 +78,9 @@ public:
     }
 };
 
-template<>
+template <>
 class LexicalCast<TcpServerConf, std::string> {
-public:
+   public:
     std::string operator()(const TcpServerConf& conf) {
         YAML::Node node;
         node["id"] = conf.id;
@@ -102,9 +94,9 @@ public:
         node["accept_worker"] = conf.accept_worker;
         node["io_worker"] = conf.io_worker;
         node["process_worker"] = conf.process_worker;
-        node["args"] = YAML::Load(LexicalCast<std::map<std::string, std::string>
-            , std::string>()(conf.args));
-        for(auto& i : conf.address) {
+        node["args"] =
+            YAML::Load(LexicalCast<std::map<std::string, std::string>, std::string>()(conf.args));
+        for (auto& i : conf.address) {
             node["address"].push_back(i);
         }
         std::stringstream ss;
@@ -116,18 +108,17 @@ public:
 /**
  * @brief TCP服务器封装
  */
-class TcpServer : public std::enable_shared_from_this<TcpServer>
-                    , Noncopyable {
-public:
+class TcpServer : public std::enable_shared_from_this<TcpServer>, Noncopyable {
+   public:
     typedef std::shared_ptr<TcpServer> ptr;
     /**
      * @brief 构造函数
      * @param[in] worker socket客户端工作的协程调度器
      * @param[in] accept_worker 服务器socket执行接收socket连接的协程调度器
      */
-    TcpServer(sylar::IOManager* worker = sylar::IOManager::GetThis()
-              ,sylar::IOManager* io_woker = sylar::IOManager::GetThis()
-              ,sylar::IOManager* accept_worker = sylar::IOManager::GetThis());
+    TcpServer(sylar::IOManager* worker = sylar::IOManager::GetThis(),
+              sylar::IOManager* io_woker = sylar::IOManager::GetThis(),
+              sylar::IOManager* accept_worker = sylar::IOManager::GetThis());
 
     /**
      * @brief 析构函数
@@ -146,11 +137,9 @@ public:
      * @param[out] fails 绑定失败的地址
      * @return 是否绑定成功
      */
-    virtual bool bind(const std::vector<Address::ptr>& addrs
-                        ,std::vector<Address::ptr>& fails
-                        ,bool ssl = false);
+    virtual bool bind(const std::vector<Address::ptr>& addrs, std::vector<Address::ptr>& fails,
+                      bool ssl = false);
 
-    
     bool loadCertificates(const std::string& cert_file, const std::string& key_file);
 
     /**
@@ -167,38 +156,59 @@ public:
     /**
      * @brief 返回读取超时时间(毫秒)
      */
-    uint64_t getRecvTimeout() const { return m_recvTimeout;}
+    uint64_t getRecvTimeout() const {
+        return m_recvTimeout;
+    }
 
     /**
      * @brief 返回服务器名称
      */
-    std::string getName() const { return m_name;}
+    std::string getName() const {
+        return m_name;
+    }
 
     /**
      * @brief 设置读取超时时间(毫秒)
      */
-    void setRecvTimeout(uint64_t v) { m_recvTimeout = v;}
+    void setRecvTimeout(uint64_t v) {
+        m_recvTimeout = v;
+    }
 
     /**
      * @brief 设置服务器名称
      */
-    virtual void setName(const std::string& v) { m_name = v;}
+    virtual void setName(const std::string& v) {
+        m_name = v;
+    }
 
     /**
      * @brief 是否停止
      */
-    bool isStop() const { return m_isStop;}
+    bool isStop() const {
+        return m_isStop;
+    }
 
-    TcpServerConf::ptr getConf() const { return m_conf;}
-    void setConf(TcpServerConf::ptr v) { m_conf = v;}
+    TcpServerConf::ptr getConf() const {
+        return m_conf;
+    }
+
+    void setConf(TcpServerConf::ptr v) {
+        m_conf = v;
+    }
+
     void setConf(const TcpServerConf& v);
 
     virtual std::string toString(const std::string& prefix = "");
 
-    std::vector<Socket::ptr> getSocks() const { return m_socks;}
-    bool isSSL() const { return m_ssl;}
-protected:
+    std::vector<Socket::ptr> getSocks() const {
+        return m_socks;
+    }
 
+    bool isSSL() const {
+        return m_ssl;
+    }
+
+   protected:
     /**
      * @brief 处理新连接的Socket类
      */
@@ -208,7 +218,8 @@ protected:
      * @brief 开始接受连接
      */
     virtual void startAccept(Socket::ptr sock);
-protected:
+
+   protected:
     /// 监听Socket数组
     std::vector<Socket::ptr> m_socks;
     /// 新连接的Socket工作的调度器
@@ -229,7 +240,6 @@ protected:
 
     TcpServerConf::ptr m_conf;
 };
-
-}
+}  // namespace sylar
 
 #endif

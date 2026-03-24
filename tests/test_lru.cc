@@ -1,16 +1,16 @@
-#include "sylar/ds/lru_cache.h"
 #include "sylar/ds/fifo_cache.h"
+#include "sylar/ds/lru_cache.h"
 
 void test_lru() {
     sylar::ds::LruCache<int, int> cache(30, 10);
 
-    for(int i = 0; i < 105; ++i) {
+    for (int i = 0; i < 105; ++i) {
         cache.set(i, i * 100);
     }
 
-    for(int i = 0; i < 105; ++i) {
+    for (int i = 0; i < 105; ++i) {
         int v;
-        if(cache.get(i, v)) {
+        if (cache.get(i, v)) {
             std::cout << "get: " << i << " - " << v << std::endl;
         }
     }
@@ -21,13 +21,13 @@ void test_lru() {
 void test_hash_lru() {
     sylar::ds::HashLruCache<int, int> cache(2, 30, 10);
 
-    for(int i = 0; i < 105; ++i) {
+    for (int i = 0; i < 105; ++i) {
         cache.set(i, i * 100);
     }
 
-    for(int i = 0; i < 105; ++i) {
+    for (int i = 0; i < 105; ++i) {
         int v;
-        if(cache.get(i, v)) {
+        if (cache.get(i, v)) {
             std::cout << "get: " << i << " - " << v << std::endl;
         }
     }
@@ -38,13 +38,13 @@ void test_hash_lru() {
 void test_fifo() {
     sylar::ds::LruCache<int, int> cache(30, 10);
 
-    for(int i = 0; i < 105; ++i) {
+    for (int i = 0; i < 105; ++i) {
         cache.set(i, i * 100);
     }
 
-    for(int i = 0; i < 105; ++i) {
+    for (int i = 0; i < 105; ++i) {
         int v;
-        if(cache.get(i, v)) {
+        if (cache.get(i, v)) {
             std::cout << "get: " << i << " - " << v << std::endl;
         }
     }

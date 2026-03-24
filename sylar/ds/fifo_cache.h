@@ -4,27 +4,24 @@
 namespace sylar {
 namespace ds {
 
-template<class K, class V, class Hash = std::hash<K>, class RWMutexType = sylar::RWMutex>
+template <class K, class V, class Hash = std::hash<K>, class RWMutexType = sylar::RWMutex>
 class FifoCache {
-public:
+   public:
     typedef std::pair<V, int64_t> value_type;
     typedef std::unordered_map<K, value_type> map_type;
     typedef std::list<K> list_type;
     typedef std::function<void(const K&, const V&)> prune_callback;
 
-    FifoCache(size_t max_size = 0, size_t elasticity = 0
-              ,CacheStatus* status = nullptr)
-        :m_maxSize(max_size)
-        ,m_elasticity(elasticity)
-        ,m_status(status) {
-        if(m_status == nullptr) {
+    FifoCache(size_t max_size = 0, size_t elasticity = 0, CacheStatus* status = nullptr)
+        : m_maxSize(max_size), m_elasticity(elasticity), m_status(status) {
+        if (m_status == nullptr) {
             m_status = new CacheStatus;
             m_statusOwner = true;
         }
     }
 
     ~FifoCache() {
-        if(m_statusOwner && m_status) {
+        if (m_statusOwner && m_status) {
             delete m_status;
         }
     }
@@ -33,7 +30,7 @@ public:
         m_status->incSet();
         typename RWMutexType::WriteLock lock(m_mutex);
         auto it = m_cache.find(k);
-        if(it != m_cache.end()) {
+        if (it != m_cache.end()) {
             it->second.first = v;
             it->second.second = time(0) + diff_time_s;
             return;
@@ -47,7 +44,7 @@ public:
         m_status->incGet();
         typename RWMutexType::ReadLock lock(m_mutex);
         auto it = m_cache.find(k);
-        if(it == m_cache.end()) {
+        if (it == m_cache.end()) {
             return 0;
         }
         v = it->second.first;
@@ -59,7 +56,7 @@ public:
         m_status->incGet();
         typename RWMutexType::ReadLock lock(m_mutex);
         auto it = m_cache.find(k);
-        if(it != m_cache.end()) {
+        if (it != m_cache.end()) {
             m_status->incHit();
             return it->second.first;
         }
@@ -88,53 +85,67 @@ public:
         return true;
     }
 
-    void setMaxSize(const size_t& v) { m_maxSize = v;}
-    void setElasticity(const size_t& v) { m_elasticity = v;}
+    void setMaxSize(const size_t& v) {
+        m_maxSize = v;
+    }
+    void setElasticity(const size_t& v) {
+        m_elasticity = v;
+    }
 
-    size_t getMaxSize() const { return m_maxSize;}
-    size_t getElasticity() const { return m_elasticity;}
-    size_t getMaxAllowedSize() const { return m_maxSize + m_elasticity;}
+    size_t getMaxSize() const {
+        return m_maxSize;
+    }
+    size_t getElasticity() const {
+        return m_elasticity;
+    }
+    size_t getMaxAllowedSize() const {
+        return m_maxSize + m_elasticity;
+    }
 
-    template<class F>
-    void foreach(F& f) {
+    template <class F>
+    void foreach (F& f) {
         typename RWMutexType::ReadLock lock(m_mutex);
         std::for_each(m_cache.begin(), m_cache.end(), f);
     }
 
-    void setPruneCallback(prune_callback cb) { m_cb = cb;}
+    void setPruneCallback(prune_callback cb) {
+        m_cb = cb;
+    }
 
     std::string toStatusString() {
         std::stringstream ss;
-        ss << (m_status ? m_status->toString() : "(no status)")
-           << " total=" << size();
+        ss << (m_status ? m_status->toString() : "(no status)") << " total=" << size();
         return ss.str();
     }
 
-    CacheStatus* getStatus() const { return m_status;}
+    CacheStatus* getStatus() const {
+        return m_status;
+    }
 
     void setStatus(CacheStatus* v, bool owner = false) {
-        if(m_statusOwner && m_status) {
+        if (m_statusOwner && m_status) {
             delete m_status;
         }
         m_status = v;
         m_statusOwner = owner;
 
-        if(m_status == nullptr) {
+        if (m_status == nullptr) {
             m_status = new CacheStatus;
             m_statusOwner = true;
         }
     }
-protected:
+
+   protected:
     size_t prune() {
-        if(m_maxSize == 0 || m_cache.size() < getMaxAllowedSize()) {
+        if (m_maxSize == 0 || m_cache.size() < getMaxAllowedSize()) {
             return 0;
         }
         size_t count = 0;
-        while(m_keys.size() > m_maxSize) {
+        while (m_keys.size() > m_maxSize) {
             auto& back = m_keys.back();
-            //if(m_cb) {
-            //    m_cb(first);
-            //}
+            // if(m_cb) {
+            //     m_cb(first);
+            // }
             m_cache.erase(back);
             m_keys.pop_back();
             ++count;
@@ -142,7 +153,8 @@ protected:
         m_status->incPrune(count);
         return count;
     }
-private:
+
+   private:
     RWMutexType m_mutex;
     map_type m_cache;
     list_type m_keys;
@@ -153,7 +165,7 @@ private:
     bool m_statusOwner = false;
 };
 
-}
-}
+}  // namespace ds
+}  // namespace sylar
 
 #endif

@@ -15,7 +15,7 @@ namespace sylar {
  * @brief 对象无法拷贝,赋值
  */
 class Noncopyable {
-public:
+   public:
     /**
      * @brief 默认构造函数
      */
@@ -37,6 +37,6 @@ public:
     Noncopyable& operator=(const Noncopyable&) = delete;
 };
 
-}
+}  // namespace sylar
 
 #endif

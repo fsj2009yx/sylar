@@ -1,4 +1,5 @@
 #include "column.h"
+
 #include "sylar/log.h"
 #include "util.h"
 
@@ -8,11 +9,11 @@ namespace orm {
 static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("orm");
 
 Column::Type Column::ParseType(const std::string& v) {
-#define XX(a, b, c) \
-    if(#b == v) { \
-        return a; \
-    } else if(#c == v) { \
-        return a; \
+#define XX(a, b, c)       \
+    if (#b == v) {        \
+        return a;         \
+    } else if (#c == v) { \
+        return a;         \
     }
 
     XX(TYPE_INT8, int8_t, int8);
@@ -35,9 +36,9 @@ Column::Type Column::ParseType(const std::string& v) {
 }
 
 std::string Column::TypeToString(Type type) {
-#define XX(a, b) \
-    if(a == type) { \
-        return #b; \
+#define XX(a, b)     \
+    if (a == type) { \
+        return #b;   \
     }
 
     XX(TYPE_INT8, int8_t);
@@ -59,9 +60,9 @@ std::string Column::TypeToString(Type type) {
 }
 
 std::string Column::getSQLite3TypeString() {
-#define XX(a, b) \
-    if(a == m_dtype) {\
-        return #b; \
+#define XX(a, b)        \
+    if (a == m_dtype) { \
+        return #b;      \
     }
 
     XX(TYPE_INT8, INTEGER);
@@ -83,9 +84,9 @@ std::string Column::getSQLite3TypeString() {
 }
 
 std::string Column::getMySQLTypeString() {
-#define XX(a, b) \
-    if(a == m_dtype) {\
-        return #b; \
+#define XX(a, b)        \
+    if (a == m_dtype) { \
+        return #b;      \
     }
 
     XX(TYPE_INT8, tinyint);
@@ -102,15 +103,15 @@ std::string Column::getMySQLTypeString() {
     XX(TYPE_BLOB, blob);
     XX(TYPE_TIMESTAMP, timestamp);
 #undef XX
-    if(m_dtype == TYPE_STRING) {
+    if (m_dtype == TYPE_STRING) {
         return "varchar(" + std::to_string(m_length ? m_length : 128) + ")";
     }
     return "";
 }
 
 std::string Column::getBindString() {
-#define XX(a, b) \
-    if(a == m_dtype) { \
+#define XX(a, b)          \
+    if (a == m_dtype) {   \
         return "bind" #b; \
     }
     XX(TYPE_INT8, Int8);
@@ -132,8 +133,8 @@ std::string Column::getBindString() {
 }
 
 std::string Column::getGetString() {
-#define XX(a, b) \
-    if(a == m_dtype) { \
+#define XX(a, b)         \
+    if (a == m_dtype) {  \
         return "get" #b; \
     }
     XX(TYPE_INT8, Int8);
@@ -155,73 +156,71 @@ std::string Column::getGetString() {
 }
 
 std::string Column::getDefaultValueString() {
-    if(m_default.empty()) {
+    if (m_default.empty()) {
         return "";
     }
-    if(m_dtype <= TYPE_DOUBLE) {
+    if (m_dtype <= TYPE_DOUBLE) {
         return m_default;
     }
-    if(m_dtype <= TYPE_BLOB) {
+    if (m_dtype <= TYPE_BLOB) {
         return "\"" + m_default + "\"";
     }
-    if(m_default == "current_timestamp") {
+    if (m_default == "current_timestamp") {
         return "time(0)";
     }
     return "sylar::Str2Time(\"" + m_default + "\")";
 }
 
 std::string Column::getSQLite3Default() {
-    if(m_dtype <= TYPE_UINT64) {
-        if(m_default.empty()) {
+    if (m_dtype <= TYPE_UINT64) {
+        if (m_default.empty()) {
             return "0";
         }
         return m_default;
     }
-    if(m_dtype <= TYPE_BLOB) {
-        if(m_default.empty()) {
+    if (m_dtype <= TYPE_BLOB) {
+        if (m_default.empty()) {
             return "''";
         }
         return "'" + m_default + "'";
     }
-    if(m_default.empty()) {
+    if (m_default.empty()) {
         return "'1980-01-01 00:00:00'";
     }
     return m_default;
 }
 
 bool Column::init(const tinyxml2::XMLElement& node) {
-    if(!node.Attribute("name")) {
+    if (!node.Attribute("name")) {
         SYLAR_LOG_ERROR(g_logger) << "column name not exists";
         return false;
     }
     m_name = node.Attribute("name");
 
-    if(!node.Attribute("type")) {
-        SYLAR_LOG_ERROR(g_logger) << "column name=" << m_name
-            << " type is null";
+    if (!node.Attribute("type")) {
+        SYLAR_LOG_ERROR(g_logger) << "column name=" << m_name << " type is null";
         return false;
     }
     m_type = node.Attribute("type");
     m_dtype = ParseType(m_type);
-    if(m_dtype == TYPE_NULL) {
-        SYLAR_LOG_ERROR(g_logger) << "column name=" << m_name
-            << " type=" << m_type
-            << " type is invalid";
+    if (m_dtype == TYPE_NULL) {
+        SYLAR_LOG_ERROR(g_logger) << "column name=" << m_name << " type=" << m_type
+                                  << " type is invalid";
         return false;
     }
-    if(node.Attribute("desc")) {
+    if (node.Attribute("desc")) {
         m_desc = node.Attribute("desc");
     }
 
-    if(node.Attribute("default")) {
+    if (node.Attribute("default")) {
         m_default = node.Attribute("default");
     }
 
-    if(node.Attribute("update")) {
+    if (node.Attribute("update")) {
         m_update = node.Attribute("update");
     }
 
-    if(node.Attribute("length")) {
+    if (node.Attribute("length")) {
         m_length = node.IntAttribute("length");
     } else {
         m_length = 0;
@@ -236,7 +235,7 @@ std::string Column::getSetFunImpl(const std::string& class_name, int idx) const 
     ss << "void " << GetAsClassName(class_name) << "::" << GetAsSetFunName(m_name) << "(const "
        << TypeToString(m_dtype) << "& v) {" << std::endl;
     ss << "    " << GetAsMemberName(m_name) << " = v;" << std::endl;
-    //ss << "    _flags |= " << (1ul << idx) << "ul;" << std::endl;
+    // ss << "    _flags |= " << (1ul << idx) << "ul;" << std::endl;
     ss << "}" << std::endl;
     return ss.str();
 }
@@ -249,17 +248,17 @@ std::string Column::getMemberDefine() const {
 
 std::string Column::getGetFunDefine() const {
     std::stringstream ss;
-    ss << "const " << TypeToString(m_dtype) << "& " << GetAsGetFunName(m_name)
-       << "() { return " << GetAsMemberName(m_name) << "; }" << std::endl;
+    ss << "const " << TypeToString(m_dtype) << "& " << GetAsGetFunName(m_name) << "() { return "
+       << GetAsMemberName(m_name) << "; }" << std::endl;
     return ss.str();
 }
 
 std::string Column::getSetFunDefine() const {
     std::stringstream ss;
-    ss << "void " << GetAsSetFunName(m_name) << "(const "
-       << TypeToString(m_dtype) << "& v);" << std::endl;
+    ss << "void " << GetAsSetFunName(m_name) << "(const " << TypeToString(m_dtype) << "& v);"
+       << std::endl;
     return ss.str();
 }
 
-}
-}
+}  // namespace orm
+}  // namespace sylar

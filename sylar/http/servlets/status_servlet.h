@@ -7,14 +7,14 @@ namespace sylar {
 namespace http {
 
 class StatusServlet : public Servlet {
-public:
+   public:
     StatusServlet();
-    virtual int32_t handle(sylar::http::HttpRequest::ptr request
-                   , sylar::http::HttpResponse::ptr response
-                   , sylar::SocketStream::ptr session) override;
+    virtual int32_t handle(sylar::http::HttpRequest::ptr request,
+                           sylar::http::HttpResponse::ptr response,
+                           sylar::SocketStream::ptr session) override;
 };
 
-}
-}
+}  // namespace http
+}  // namespace sylar
 
 #endif

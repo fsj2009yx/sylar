@@ -16,20 +16,20 @@ static const uint32_t DEFAULT_MAX_READ_FRAME_SIZE = 1 << 20;
 static const uint32_t DEFAULT_MAX_CONCURRENT_STREAMS = 0xffffffffu;
 
 enum class Http2Error {
-    OK                          = 0x0,
-    PROTOCOL_ERROR              = 0x1,
-    INTERNAL_ERROR              = 0x2,
-    FLOW_CONTROL_ERROR          = 0x3,
-    SETTINGS_TIMEOUT_ERROR      = 0x4,
-    STREAM_CLOSED_ERROR         = 0x5,
-    FRAME_SIZE_ERROR            = 0x6,
-    REFUSED_STREAM_ERROR        = 0x7,
-    CANCEL_ERROR                = 0x8,
-    COMPRESSION_ERROR           = 0x9,
-    CONNECT_ERROR               = 0xa,
-    ENHANCE_YOUR_CALM_ERROR     = 0xb,
-    INADEQUATE_SECURITY_ERROR   = 0xc,
-    HTTP11_REQUIRED_ERROR       = 0xd,
+    OK = 0x0,
+    PROTOCOL_ERROR = 0x1,
+    INTERNAL_ERROR = 0x2,
+    FLOW_CONTROL_ERROR = 0x3,
+    SETTINGS_TIMEOUT_ERROR = 0x4,
+    STREAM_CLOSED_ERROR = 0x5,
+    FRAME_SIZE_ERROR = 0x6,
+    REFUSED_STREAM_ERROR = 0x7,
+    CANCEL_ERROR = 0x8,
+    COMPRESSION_ERROR = 0x9,
+    CONNECT_ERROR = 0xa,
+    ENHANCE_YOUR_CALM_ERROR = 0xb,
+    INADEQUATE_SECURITY_ERROR = 0xc,
+    HTTP11_REQUIRED_ERROR = 0xd,
 };
 
 std::string Http2ErrorToString(Http2Error error);
@@ -42,7 +42,7 @@ struct Http2Settings {
     uint32_t initial_window_size = DEFAULT_INITIAL_WINDOW_SIZE;
     bool enable_push = 0;
 
-   std::string toString() const;
+    std::string toString() const;
 };
 
 void Http2InitRequestForWrite(sylar::http::HttpRequest::ptr req, bool ssl = false);
@@ -51,7 +51,7 @@ void Http2InitResponseForWrite(sylar::http::HttpResponse::ptr rsp);
 void Http2InitRequestForRead(sylar::http::HttpRequest::ptr req);
 void Http2InitResponseForRead(sylar::http::HttpResponse::ptr rsp);
 
-}
-}
+}  // namespace http2
+}  // namespace sylar
 
 #endif

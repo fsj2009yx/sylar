@@ -1,21 +1,20 @@
 #include "rock_protocol.h"
-#include "sylar/log.h"
+
 #include "sylar/config.h"
 #include "sylar/endian.h"
-#include "sylar/streams/zlib_stream.h"
+#include "sylar/log.h"
 #include "sylar/macro.h"
+#include "sylar/streams/zlib_stream.h"
 
 namespace sylar {
 
 static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
-static sylar::ConfigVar<uint32_t>::ptr g_rock_protocol_max_length
-    = sylar::Config::Lookup("rock.protocol.max_length",
-                            (uint32_t)(1024 * 1024 * 64), "rock protocol max length");
+static sylar::ConfigVar<uint32_t>::ptr g_rock_protocol_max_length = sylar::Config::Lookup(
+    "rock.protocol.max_length", (uint32_t)(1024 * 1024 * 64), "rock protocol max length");
 
-static sylar::ConfigVar<uint32_t>::ptr g_rock_protocol_gzip_min_length
-    = sylar::Config::Lookup("rock.protocol.gzip_min_length",
-                            (uint32_t)(1024 * 1024 * 64), "rock protocol gizp min length");
+static sylar::ConfigVar<uint32_t>::ptr g_rock_protocol_gzip_min_length = sylar::Config::Lookup(
+    "rock.protocol.gzip_min_length", (uint32_t)(1024 * 1024 * 64), "rock protocol gizp min length");
 
 bool RockBody::serializeToByteArray(ByteArray::ptr bytearray) {
     bytearray->writeStringF32(m_body);
@@ -36,10 +35,7 @@ std::shared_ptr<RockResponse> RockRequest::createResponse() {
 
 std::string RockRequest::toString() const {
     std::stringstream ss;
-    ss << "[RockRequest sn=" << m_sn
-       << " cmd=" << m_cmd
-       << " body.length=" << m_body.size()
-       << "]";
+    ss << "[RockRequest sn=" << m_sn << " cmd=" << m_cmd << " body.length=" << m_body.size() << "]";
     return ss.str();
 }
 
@@ -72,19 +68,15 @@ bool RockRequest::parseFromByteArray(ByteArray::ptr bytearray) {
         return v;
     } catch (...) {
         SYLAR_LOG_ERROR(g_logger) << "RockRequest parseFromByteArray error "
-            << bytearray->toHexString();
+                                  << bytearray->toHexString();
     }
     return false;
 }
 
 std::string RockResponse::toString() const {
     std::stringstream ss;
-    ss << "[RockResponse sn=" << m_sn
-       << " cmd=" << m_cmd
-       << " result=" << m_result
-       << " result_msg=" << m_resultStr
-       << " body.length=" << m_body.size()
-       << "]";
+    ss << "[RockResponse sn=" << m_sn << " cmd=" << m_cmd << " result=" << m_result
+       << " result_msg=" << m_resultStr << " body.length=" << m_body.size() << "]";
     return ss.str();
 }
 
@@ -123,9 +115,7 @@ bool RockResponse::parseFromByteArray(ByteArray::ptr bytearray) {
 
 std::string RockNotify::toString() const {
     std::stringstream ss;
-    ss << "[RockNotify notify=" << m_notify
-       << " body.length=" << m_body.size()
-       << "]";
+    ss << "[RockNotify notify=" << m_notify << " body.length=" << m_body.size() << "]";
     return ss.str();
 }
 
@@ -165,55 +155,52 @@ bool RockNotify::parseFromByteArray(ByteArray::ptr bytearray) {
 static const uint8_t s_rock_magic[2] = {0x12, 0x21};
 
 RockMsgHeader::RockMsgHeader()
-    :magic{s_rock_magic[0], s_rock_magic[1]}
-    ,version(1)
-    ,flag(0)
-    ,length(0) {
-}
+    : magic{s_rock_magic[0], s_rock_magic[1]}, version(1), flag(0), length(0) {}
 
 Message::ptr RockMessageDecoder::parseFrom(Stream::ptr stream) {
     try {
         RockMsgHeader header;
         int rt = stream->readFixSize(&header, sizeof(header));
-        if(rt <= 0) {
-            SYLAR_LOG_DEBUG(g_logger) << "RockMessageDecoder decode head error rt=" << rt << " " << strerror(errno);
+        if (rt <= 0) {
+            SYLAR_LOG_DEBUG(g_logger)
+                << "RockMessageDecoder decode head error rt=" << rt << " " << strerror(errno);
             return nullptr;
         }
 
-        if(memcmp(header.magic, s_rock_magic, sizeof(s_rock_magic))) {
+        if (memcmp(header.magic, s_rock_magic, sizeof(s_rock_magic))) {
             SYLAR_LOG_ERROR(g_logger) << "RockMessageDecoder head.magic error";
             return nullptr;
         }
 
-        if(header.version != 0x1) {
+        if (header.version != 0x1) {
             SYLAR_LOG_ERROR(g_logger) << "RockMessageDecoder head.version != 0x1";
             return nullptr;
         }
 
         header.length = sylar::byteswapOnLittleEndian(header.length);
-        if((uint32_t)header.length >= g_rock_protocol_max_length->getValue()) {
-            SYLAR_LOG_ERROR(g_logger) << "RockMessageDecoder head.length("
-                                      << header.length << ") >="
-                                      << g_rock_protocol_max_length->getValue();
+        if ((uint32_t)header.length >= g_rock_protocol_max_length->getValue()) {
+            SYLAR_LOG_ERROR(g_logger) << "RockMessageDecoder head.length(" << header.length
+                                      << ") >=" << g_rock_protocol_max_length->getValue();
             return nullptr;
         }
         sylar::ByteArray::ptr ba = std::make_shared<sylar::ByteArray>();
         rt = stream->readFixSize(ba, header.length);
-        if(rt <= 0) {
-            SYLAR_LOG_ERROR(g_logger) << "RockMessageDecoder read body fail length=" << header.length << " rt=" << rt
+        if (rt <= 0) {
+            SYLAR_LOG_ERROR(g_logger)
+                << "RockMessageDecoder read body fail length=" << header.length << " rt=" << rt
                 << " errno=" << errno << " - " << strerror(errno);
             return nullptr;
         }
 
         ba->setPosition(0);
-        //SYLAR_LOG_INFO(g_logger) << ba->toHexString();
-        if(header.flag & 0x1) { //gizp
+        // SYLAR_LOG_INFO(g_logger) << ba->toHexString();
+        if (header.flag & 0x1) {  // gizp
             auto zstream = sylar::ZlibStream::CreateGzip(false);
-            if(zstream->write(ba, -1) != Z_OK) {
+            if (zstream->write(ba, -1) != Z_OK) {
                 SYLAR_LOG_ERROR(g_logger) << "RockMessageDecoder ungzip error";
                 return nullptr;
             }
-            if(zstream->flush() != Z_OK) {
+            if (zstream->flush() != Z_OK) {
                 SYLAR_LOG_ERROR(g_logger) << "RockMessageDecoder ungzip flush error";
                 return nullptr;
             }
@@ -221,7 +208,7 @@ Message::ptr RockMessageDecoder::parseFrom(Stream::ptr stream) {
         }
         uint8_t type = ba->readFuint8();
         Message::ptr msg;
-        switch(type) {
+        switch (type) {
             case Message::REQUEST:
                 msg = std::make_shared<RockRequest>();
                 break;
@@ -236,8 +223,9 @@ Message::ptr RockMessageDecoder::parseFrom(Stream::ptr stream) {
                 return nullptr;
         }
 
-        if(!msg->parseFromByteArray(ba)) {
-            SYLAR_LOG_ERROR(g_logger) << "RockMessageDecoder parseFromByteArray fail type=" << (int)type;
+        if (!msg->parseFromByteArray(ba)) {
+            SYLAR_LOG_ERROR(g_logger)
+                << "RockMessageDecoder parseFromByteArray fail type=" << (int)type;
             return nullptr;
         }
         return msg;
@@ -254,13 +242,13 @@ int32_t RockMessageDecoder::serializeTo(Stream::ptr stream, Message::ptr msg) {
     auto ba = msg->toByteArray();
     ba->setPosition(0);
     header.length = ba->getSize();
-    if((uint32_t)header.length >= g_rock_protocol_gzip_min_length->getValue()) {
+    if ((uint32_t)header.length >= g_rock_protocol_gzip_min_length->getValue()) {
         auto zstream = sylar::ZlibStream::CreateGzip(true);
-        if(zstream->write(ba, -1) != Z_OK) {
+        if (zstream->write(ba, -1) != Z_OK) {
             SYLAR_LOG_ERROR(g_logger) << "RockMessageDecoder serializeTo gizp error";
             return -1;
         }
-        if(zstream->flush() != Z_OK) {
+        if (zstream->flush() != Z_OK) {
             SYLAR_LOG_ERROR(g_logger) << "RockMessageDecoder serializeTo gizp flush error";
             return -2;
         }
@@ -271,18 +259,18 @@ int32_t RockMessageDecoder::serializeTo(Stream::ptr stream, Message::ptr msg) {
     }
     header.length = sylar::byteswapOnLittleEndian(header.length);
     int rt = stream->writeFixSize(&header, sizeof(header));
-    if(rt <= 0) {
+    if (rt <= 0) {
         SYLAR_LOG_ERROR(g_logger) << "RockMessageDecoder serializeTo write header fail rt=" << rt
-                << " errno=" << errno << " - " << strerror(errno);
+                                  << " errno=" << errno << " - " << strerror(errno);
         return -3;
     }
     rt = stream->writeFixSize(ba, ba->getReadSize());
-    if(rt <= 0) {
+    if (rt <= 0) {
         SYLAR_LOG_ERROR(g_logger) << "RockMessageDecoder serializeTo write body fail rt=" << rt
-            << " errno=" << errno << " - " << strerror(errno);
+                                  << " errno=" << errno << " - " << strerror(errno);
         return -4;
     }
     return sizeof(header) + ba->getSize();
 }
 
-}
+}  // namespace sylar

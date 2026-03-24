@@ -2,26 +2,28 @@
 #define __SYLAR_DS_BITMAP_H__
 
 #include <stdint.h>
+
+#include <functional>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
-#include <functional>
+
 #include "sylar/bytearray.h"
 
 namespace sylar {
 namespace ds {
 
-#define BITMAP_TYPE_UINT8    1
-#define BITMAP_TYPE_UINT16   2 
-#define BITMAP_TYPE_UINT32   3
-#define BITMAP_TYPE_UINT64   4
+#define BITMAP_TYPE_UINT8 1
+#define BITMAP_TYPE_UINT16 2
+#define BITMAP_TYPE_UINT32 3
+#define BITMAP_TYPE_UINT64 4
 
 #ifndef BITMAP_TYPE
 #define BITMAP_TYPE BITMAP_TYPE_UINT16
 #endif
 
 class Bitmap {
-public:
+   public:
     typedef std::shared_ptr<Bitmap> ptr;
 #if BITMAP_TYPE == BITMAP_TYPE_UINT8
     typedef uint8_t base_type;
@@ -49,44 +51,51 @@ public:
     Bitmap& operator&=(const Bitmap& b);
     Bitmap& operator|=(const Bitmap& b);
 
-    Bitmap operator& (const Bitmap& b);
-    Bitmap operator| (const Bitmap& b);
+    Bitmap operator&(const Bitmap& b);
+    Bitmap operator|(const Bitmap& b);
 
     Bitmap& operator~();
 
-    bool operator== (const Bitmap& b) const;
-    bool operator!= (const Bitmap& b) const;
+    bool operator==(const Bitmap& b) const;
+    bool operator!=(const Bitmap& b) const;
 
     Bitmap::ptr compress() const;
     Bitmap::ptr uncompress() const;
 
     bool any() const;
 
-    uint32_t getSize() const { return m_size;}
-    uint32_t getDataSize() const { return m_dataSize;}
-    bool isCompress() const { return m_compress;}
+    uint32_t getSize() const {
+        return m_size;
+    }
+    uint32_t getDataSize() const {
+        return m_dataSize;
+    }
+    bool isCompress() const {
+        return m_compress;
+    }
 
     void resize(uint32_t size, bool v = false);
 
     void listPosAsc(std::vector<uint32_t>& pos);
-    //void listPosDesc(std::vector<uint32_t>& pos);
+    // void listPosDesc(std::vector<uint32_t>& pos);
 
-    void foreach(std::function<bool(uint32_t)> cb);
+    void foreach (std::function<bool(uint32_t)> cb);
     void rforeach(std::function<bool(uint32_t)> cb);
 
     void writeTo(sylar::ByteArray::ptr ba) const;
     bool readFrom(sylar::ByteArray::ptr ba);
 
-    //uncompress to compress
-    //uncompress to uncompress
+    // uncompress to compress
+    // uncompress to uncompress
     bool cross(const Bitmap& b) const;
 
     float getCompressRate() const;
 
     uint32_t getCount() const;
-public:
+
+   public:
     class iterator_base {
-    public:
+       public:
         typedef std::shared_ptr<iterator_base> ptr;
 
         iterator_base();
@@ -95,7 +104,8 @@ public:
         bool operator!();
         int32_t operator*();
         virtual void next() = 0;
-    protected:
+
+       protected:
         int32_t m_pos;
         int32_t m_size;
         int32_t m_dataSize;
@@ -104,36 +114,45 @@ public:
     };
 
     class iterator : public iterator_base {
-    public:
+       public:
         iterator() {}
         iterator(Bitmap* b);
         void next();
     };
 
     class iterator_reverse : public iterator_base {
-    public:
+       public:
         iterator_reverse() {}
         iterator_reverse(Bitmap* b);
         void next();
     };
-public:
-    iterator begin() { return iterator(this);}
-    iterator_reverse rbegin() { return iterator_reverse(this);}
+
+   public:
+    iterator begin() {
+        return iterator(this);
+    }
+    iterator_reverse rbegin() {
+        return iterator_reverse(this);
+    }
 
     typename iterator_base::ptr begin_new();
     typename iterator_base::ptr rbegin_new();
-private:
+
+   private:
     bool normalCross(const Bitmap& b) const;
-    //uncompress to compress
+    // uncompress to compress
     bool compressCross(const Bitmap& b) const;
-protected:
+
+   protected:
     Bitmap();
-private:
+
+   private:
     bool m_compress;
     uint32_t m_size;
     uint32_t m_dataSize;
     base_type* m_data;
-private:
+
+   private:
     static const uint32_t VALUE_SIZE = sizeof(base_type) * 8 - 2;
     static const base_type COMPRESS_MASK = ((base_type)1 << (sizeof(base_type) * 8 - 1));
     static const base_type VALUE_MASK = ((base_type)1 << (sizeof(base_type) * 8 - 2));
@@ -145,11 +164,12 @@ private:
     static base_type POS[sizeof(base_type) * 8];
     static base_type NPOS[sizeof(base_type) * 8];
     static base_type MASK[sizeof(base_type) * 8];
-public:
+
+   public:
     static bool init();
 };
 
-}
-}
+}  // namespace ds
+}  // namespace sylar
 
 #endif

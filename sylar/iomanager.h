@@ -18,29 +18,30 @@ namespace sylar {
  * @brief 基于Epoll的IO协程调度器
  */
 class IOManager : public Scheduler, public TimerManager {
-public:
+   public:
     typedef std::shared_ptr<IOManager> ptr;
     typedef RWMutex RWMutexType;
-    //typedef NullRWMutex RWMutexType;
-    //typedef RWSpinlock RWMutexType;
+    // typedef NullRWMutex RWMutexType;
+    // typedef RWSpinlock RWMutexType;
 
     /**
      * @brief IO事件
      */
     enum Event {
         /// 无事件
-        NONE    = 0x0,
+        NONE = 0x0,
         /// 读事件(EPOLLIN)
-        READ    = 0x1,
+        READ = 0x1,
         /// 写事件(EPOLLOUT)
-        WRITE   = 0x4,
+        WRITE = 0x4,
     };
-private:
+
+   private:
     /**
      * @brief Socket事件上线文类
      */
     struct FdContext {
-        //typedef Mutex MutexType;
+        // typedef Mutex MutexType;
         typedef Spinlock MutexType;
         /**
          * @brief 事件上线文类
@@ -85,7 +86,7 @@ private:
         MutexType mutex;
     };
 
-public:
+   public:
     /**
      * @brief 构造函数
      * @param[in] threads 线程数量
@@ -134,7 +135,8 @@ public:
      * @brief 返回当前的IOManager
      */
     static IOManager* GetThis();
-protected:
+
+   protected:
     void tickle() override;
     bool stopping() override;
     void idle() override;
@@ -152,7 +154,8 @@ protected:
      * @return 返回是否可以停止
      */
     bool stopping(uint64_t& timeout);
-private:
+
+   private:
     /// epoll 文件句柄
     int m_epfd = 0;
     /// pipe 文件句柄
@@ -165,6 +168,6 @@ private:
     std::vector<FdContext*> m_fdContexts;
 };
 
-}
+}  // namespace sylar
 
 #endif

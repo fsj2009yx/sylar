@@ -6,9 +6,9 @@
 namespace sylar {
 namespace ds {
 
-template<class T>
+template <class T>
 class BlockingQueue {
-public:
+   public:
     typedef std::shared_ptr<BlockingQueue> ptr;
     typedef std::shared_ptr<T> data_type;
     typedef sylar::Spinlock MutexType;
@@ -43,13 +43,14 @@ public:
     void notifyAll() {
         m_sem.notifyAll();
     }
-private:
+
+   private:
     sylar::FiberSemaphore m_sem;
     MutexType m_mutex;
     std::list<data_type> m_datas;
 };
 
-}
-}
+}  // namespace ds
+}  // namespace sylar
 
 #endif

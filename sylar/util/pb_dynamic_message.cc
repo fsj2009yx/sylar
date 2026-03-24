@@ -1,7 +1,9 @@
 #include "pb_dynamic_message.h"
-#include "sylar/util.h"
-#include "sylar/log.h"
+
 #include <google/protobuf/util/json_util.h>
+
+#include "sylar/log.h"
+#include "sylar/util.h"
 
 namespace sylar {
 
@@ -10,8 +12,8 @@ static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 std::string ProtoToJson(const google::protobuf::Message& m) {
     std::string out;
     google::protobuf::util::JsonPrintOptions options;
-    //options.add_whitespace = true;
-    //options.always_print_primitive_fields = true;
+    // options.add_whitespace = true;
+    // options.always_print_primitive_fields = true;
     options.preserve_proto_field_names = true;
     google::protobuf::util::MessageToJsonString(m, &out, options);
     return out;
@@ -23,19 +25,19 @@ bool JsonToProto(const std::string& json, google::protobuf::Message& m) {
     return google::protobuf::util::JsonStringToMessage(json, &m, options).ok();
 }
 
-PbDynamicMessage::PbDynamicMessage(std::shared_ptr<google::protobuf::Message> data)
-    :m_data(data) {
+PbDynamicMessage::PbDynamicMessage(std::shared_ptr<google::protobuf::Message> data) : m_data(data) {
     m_reflection = m_data->GetReflection();
     m_descriptor = m_data->GetDescriptor();
 }
 
-const google::protobuf::FieldDescriptor* PbDynamicMessage::getFieldByName(const std::string& name) const {
+const google::protobuf::FieldDescriptor* PbDynamicMessage::getFieldByName(
+    const std::string& name) const {
     return m_descriptor->FindFieldByName(name);
 }
 
 bool PbDynamicMessage::hasFieldValue(const std::string& name) const {
     auto fd = getFieldByName(name);
-    if(fd) {
+    if (fd) {
         return hasFieldValue(fd);
     }
     return false;
@@ -47,7 +49,7 @@ bool PbDynamicMessage::hasFieldValue(const google::protobuf::FieldDescriptor* fi
 
 int32_t PbDynamicMessage::getFieldValueSize(const std::string& name) const {
     auto fd = getFieldByName(name);
-    if(fd) {
+    if (fd) {
         return getFieldValueSize(fd);
     }
     return 0;
@@ -57,10 +59,9 @@ int32_t PbDynamicMessage::getFieldValueSize(const google::protobuf::FieldDescrip
     return m_reflection->FieldSize(*m_data, field);
 }
 
-
 void PbDynamicMessage::clearFieldValue(const std::string& name) {
     auto fd = getFieldByName(name);
-    if(fd) {
+    if (fd) {
         clearFieldValue(fd);
     }
 }
@@ -75,26 +76,26 @@ std::vector<const google::protobuf::FieldDescriptor*> PbDynamicMessage::listFiel
     return rt;
 }
 
-#define GEN_GET_SET(funcname, pbtype, type) \
-type PbDynamicMessage::get##funcname(const std::string& name) const {  \
-    auto fd = getFieldByName(name); \
-    if(fd) { \
-        return get##funcname(fd); \
-    } \
-    return 0; \
-} \
-type PbDynamicMessage::get##funcname(const google::protobuf::FieldDescriptor* field) const { \
-    return m_reflection->Get##pbtype(*m_data, field); \
-} \
-void PbDynamicMessage::set##funcname(const std::string& name, type v) { \
-    auto fd = getFieldByName(name); \
-    if(fd) { \
-        set##funcname(fd, v); \
-    } \
-} \
-void PbDynamicMessage::set##funcname(const google::protobuf::FieldDescriptor* field, type v) { \
-    m_reflection->Set##pbtype(m_data.get(), field, v); \
-}
+#define GEN_GET_SET(funcname, pbtype, type)                                                        \
+    type PbDynamicMessage::get##funcname(const std::string& name) const {                          \
+        auto fd = getFieldByName(name);                                                            \
+        if (fd) {                                                                                  \
+            return get##funcname(fd);                                                              \
+        }                                                                                          \
+        return 0;                                                                                  \
+    }                                                                                              \
+    type PbDynamicMessage::get##funcname(const google::protobuf::FieldDescriptor* field) const {   \
+        return m_reflection->Get##pbtype(*m_data, field);                                          \
+    }                                                                                              \
+    void PbDynamicMessage::set##funcname(const std::string& name, type v) {                        \
+        auto fd = getFieldByName(name);                                                            \
+        if (fd) {                                                                                  \
+            set##funcname(fd, v);                                                                  \
+        }                                                                                          \
+    }                                                                                              \
+    void PbDynamicMessage::set##funcname(const google::protobuf::FieldDescriptor* field, type v) { \
+        m_reflection->Set##pbtype(m_data.get(), field, v);                                         \
+    }
 
 GEN_GET_SET(Int32Value, Int32, int32_t);
 GEN_GET_SET(Uint32Value, UInt32, uint32_t);
@@ -106,58 +107,61 @@ GEN_GET_SET(BoolValue, Bool, bool);
 
 #undef GEN_GET_SET
 
-#define GEN_GET_SET(funcname, pbtype, type) \
-type PbDynamicMessage::get##funcname(const std::string& name) const {  \
-    auto fd = getFieldByName(name); \
-    if(fd) { \
-        return get##funcname(fd); \
-    } \
-    return 0; \
-} \
-type PbDynamicMessage::get##funcname(const google::protobuf::FieldDescriptor* field) const { \
-    return m_reflection->Get##pbtype(*m_data, field); \
-} \
-void PbDynamicMessage::set##funcname(const std::string& name, const type& v) { \
-    auto fd = getFieldByName(name); \
-    if(fd) { \
-        set##funcname(fd, v); \
-    } \
-} \
-void PbDynamicMessage::set##funcname(const google::protobuf::FieldDescriptor* field, const type& v) { \
-    m_reflection->Set##pbtype(m_data.get(), field, v); \
-}
+#define GEN_GET_SET(funcname, pbtype, type)                                                      \
+    type PbDynamicMessage::get##funcname(const std::string& name) const {                        \
+        auto fd = getFieldByName(name);                                                          \
+        if (fd) {                                                                                \
+            return get##funcname(fd);                                                            \
+        }                                                                                        \
+        return 0;                                                                                \
+    }                                                                                            \
+    type PbDynamicMessage::get##funcname(const google::protobuf::FieldDescriptor* field) const { \
+        return m_reflection->Get##pbtype(*m_data, field);                                        \
+    }                                                                                            \
+    void PbDynamicMessage::set##funcname(const std::string& name, const type& v) {               \
+        auto fd = getFieldByName(name);                                                          \
+        if (fd) {                                                                                \
+            set##funcname(fd, v);                                                                \
+        }                                                                                        \
+    }                                                                                            \
+    void PbDynamicMessage::set##funcname(const google::protobuf::FieldDescriptor* field,         \
+                                         const type& v) {                                        \
+        m_reflection->Set##pbtype(m_data.get(), field, v);                                       \
+    }
 GEN_GET_SET(StringValue, String, std::string);
 #undef GEN_GET_SET
 
-#define GEN_GEt_SEt_ADD(funcname, pbtype, type) \
-type PbDynamicMessage::getRepeated##funcname(const std::string& name, int32_t idx) const { \
-    auto fd = getFieldByName(name); \
-    if(fd) { \
-        return getRepeated##funcname(fd, idx); \
-    } \
-    return 0; \
-} \
-type PbDynamicMessage::getRepeated##funcname(const google::protobuf::FieldDescriptor* field, int32_t idx) const { \
-    return m_reflection->GetRepeated##pbtype(*m_data, field, idx); \
-} \
-void    PbDynamicMessage::setRepeated##funcname(const std::string& name, int32_t idx, type v) { \
-    auto fd = getFieldByName(name); \
-    if(fd) { \
-        return setRepeated##funcname(fd, idx, v); \
-    } \
-} \
-void    PbDynamicMessage::setRepeated##funcname(const google::protobuf::FieldDescriptor* field, int32_t idx, type v) { \
-    m_reflection->SetRepeated##pbtype(m_data.get(), field, idx, v); \
-} \
-void    PbDynamicMessage::add##funcname(const std::string& name, type v) { \
-    auto fd = getFieldByName(name); \
-    if(fd) { \
-        return add##funcname(fd, v); \
-    } \
-} \
-void    PbDynamicMessage::add##funcname(const google::protobuf::FieldDescriptor* field, type v) { \
-    m_reflection->Add##pbtype(m_data.get(), field, v); \
-}
+#define GEN_GEt_SEt_ADD(funcname, pbtype, type)                                                    \
+    type PbDynamicMessage::getRepeated##funcname(const std::string& name, int32_t idx) const {     \
+        auto fd = getFieldByName(name);                                                            \
+        if (fd) {                                                                                  \
+            return getRepeated##funcname(fd, idx);                                                 \
+        }                                                                                          \
+        return 0;                                                                                  \
+    }                                                                                              \
+    type PbDynamicMessage::getRepeated##funcname(const google::protobuf::FieldDescriptor* field,   \
+                                                 int32_t idx) const {                              \
+        return m_reflection->GetRepeated##pbtype(*m_data, field, idx);                             \
+    }                                                                                              \
+    void PbDynamicMessage::setRepeated##funcname(const std::string& name, int32_t idx, type v) {   \
+        auto fd = getFieldByName(name);                                                            \
+        if (fd) {                                                                                  \
+            return setRepeated##funcname(fd, idx, v);                                              \
+        }                                                                                          \
+    }                                                                                              \
+    void PbDynamicMessage::setRepeated##funcname(const google::protobuf::FieldDescriptor* field,   \
+                                                 int32_t idx, type v) {                            \
+        m_reflection->SetRepeated##pbtype(m_data.get(), field, idx, v);                            \
+    }                                                                                              \
+    void PbDynamicMessage::add##funcname(const std::string& name, type v) {                        \
+        auto fd = getFieldByName(name);                                                            \
+        if (fd) {                                                                                  \
+            return add##funcname(fd, v);                                                           \
+        }                                                                                          \
+    }                                                                                              \
+    void PbDynamicMessage::add##funcname(const google::protobuf::FieldDescriptor* field, type v) { \
+        m_reflection->Add##pbtype(m_data.get(), field, v);                                         \
+    }
 
 GEN_GEt_SEt_ADD(Int32Value, Int32, int32_t);
 GEN_GEt_SEt_ADD(Uint32Value, UInt32, uint32_t);
@@ -168,69 +172,74 @@ GEN_GEt_SEt_ADD(DoubleValue, Double, double);
 GEN_GEt_SEt_ADD(BoolValue, Bool, bool);
 #undef GEN_GEt_SEt_ADD
 
-#define GEN_GEt_SEt_ADD(funcname, pbtype, type) \
-type PbDynamicMessage::getRepeated##funcname(const std::string& name, int32_t idx) const { \
-    auto fd = getFieldByName(name); \
-    if(fd) { \
-        return getRepeated##funcname(fd, idx); \
-    } \
-    return 0; \
-} \
-type PbDynamicMessage::getRepeated##funcname(const google::protobuf::FieldDescriptor* field, int32_t idx) const { \
-    return m_reflection->GetRepeated##pbtype(*m_data, field, idx); \
-} \
-void    PbDynamicMessage::setRepeated##funcname(const std::string& name, int32_t idx, const type& v) { \
-    auto fd = getFieldByName(name); \
-    if(fd) { \
-        return setRepeated##funcname(fd, idx, v); \
-    } \
-} \
-void    PbDynamicMessage::setRepeated##funcname(const google::protobuf::FieldDescriptor* field, int32_t idx,const type& v) { \
-    m_reflection->SetRepeated##pbtype(m_data.get(), field, idx, v); \
-} \
-void    PbDynamicMessage::add##funcname(const std::string& name, const type& v) { \
-    auto fd = getFieldByName(name); \
-    if(fd) { \
-        return add##funcname(fd, v); \
-    } \
-} \
-void    PbDynamicMessage::add##funcname(const google::protobuf::FieldDescriptor* field, const type& v) { \
-    m_reflection->Add##pbtype(m_data.get(), field, v); \
-}
+#define GEN_GEt_SEt_ADD(funcname, pbtype, type)                                                  \
+    type PbDynamicMessage::getRepeated##funcname(const std::string& name, int32_t idx) const {   \
+        auto fd = getFieldByName(name);                                                          \
+        if (fd) {                                                                                \
+            return getRepeated##funcname(fd, idx);                                               \
+        }                                                                                        \
+        return 0;                                                                                \
+    }                                                                                            \
+    type PbDynamicMessage::getRepeated##funcname(const google::protobuf::FieldDescriptor* field, \
+                                                 int32_t idx) const {                            \
+        return m_reflection->GetRepeated##pbtype(*m_data, field, idx);                           \
+    }                                                                                            \
+    void PbDynamicMessage::setRepeated##funcname(const std::string& name, int32_t idx,           \
+                                                 const type& v) {                                \
+        auto fd = getFieldByName(name);                                                          \
+        if (fd) {                                                                                \
+            return setRepeated##funcname(fd, idx, v);                                            \
+        }                                                                                        \
+    }                                                                                            \
+    void PbDynamicMessage::setRepeated##funcname(const google::protobuf::FieldDescriptor* field, \
+                                                 int32_t idx, const type& v) {                   \
+        m_reflection->SetRepeated##pbtype(m_data.get(), field, idx, v);                          \
+    }                                                                                            \
+    void PbDynamicMessage::add##funcname(const std::string& name, const type& v) {               \
+        auto fd = getFieldByName(name);                                                          \
+        if (fd) {                                                                                \
+            return add##funcname(fd, v);                                                         \
+        }                                                                                        \
+    }                                                                                            \
+    void PbDynamicMessage::add##funcname(const google::protobuf::FieldDescriptor* field,         \
+                                         const type& v) {                                        \
+        m_reflection->Add##pbtype(m_data.get(), field, v);                                       \
+    }
 
 GEN_GEt_SEt_ADD(StringValue, String, std::string);
 #undef GEN_GEt_SEt_ADD
 
-
-
 PbDynamicMessage::ptr PbDynamicMessage::mutableMessage(const std::string& name) const {
     auto fd = getFieldByName(name);
-    if(fd) {
+    if (fd) {
         return mutableMessage(fd);
     }
     return nullptr;
 }
 
-PbDynamicMessage::ptr PbDynamicMessage::mutableMessage(const google::protobuf::FieldDescriptor* field) const {
+PbDynamicMessage::ptr PbDynamicMessage::mutableMessage(
+    const google::protobuf::FieldDescriptor* field) const {
     auto msg = m_reflection->MutableMessage(m_data.get(), field);
-    if(msg) {
+    if (msg) {
         std::shared_ptr<google::protobuf::Message> sm(msg, sylar::nop<google::protobuf::Message>);
         return std::make_shared<PbDynamicMessage>(sm);
     }
     return nullptr;
 }
 
-PbDynamicMessage::ptr PbDynamicMessage::mutableRepeatedMessage(const std::string& name, int32_t idx) {
+PbDynamicMessage::ptr PbDynamicMessage::mutableRepeatedMessage(const std::string& name,
+                                                               int32_t idx) {
     auto fd = getFieldByName(name);
-    if(fd) {
+    if (fd) {
         return mutableRepeatedMessage(fd, idx);
     }
     return nullptr;
 }
 
-PbDynamicMessage::ptr PbDynamicMessage::mutableRepeatedMessage(const google::protobuf::FieldDescriptor* field, int32_t idx) {
+PbDynamicMessage::ptr PbDynamicMessage::mutableRepeatedMessage(
+    const google::protobuf::FieldDescriptor* field, int32_t idx) {
     auto msg = m_reflection->MutableRepeatedMessage(m_data.get(), field, idx);
-    if(msg) {
+    if (msg) {
         std::shared_ptr<google::protobuf::Message> sm(msg, sylar::nop<google::protobuf::Message>);
         return std::make_shared<PbDynamicMessage>(sm);
     }
@@ -239,7 +248,7 @@ PbDynamicMessage::ptr PbDynamicMessage::mutableRepeatedMessage(const google::pro
 
 PbDynamicMessage::ptr PbDynamicMessage::addMessage(const std::string& name) {
     auto fd = getFieldByName(name);
-    if(fd) {
+    if (fd) {
         return addMessage(fd);
     }
     return nullptr;
@@ -247,7 +256,7 @@ PbDynamicMessage::ptr PbDynamicMessage::addMessage(const std::string& name) {
 
 PbDynamicMessage::ptr PbDynamicMessage::addMessage(const google::protobuf::FieldDescriptor* field) {
     auto msg = m_reflection->AddMessage(m_data.get(), field);
-    if(msg) {
+    if (msg) {
         std::shared_ptr<google::protobuf::Message> sm(msg, sylar::nop<google::protobuf::Message>);
         return std::make_shared<PbDynamicMessage>(sm);
     }
@@ -308,7 +317,7 @@ const std::string& PbDynamicMessageProto::getName() const {
     return m_data.name();
 }
 
-void PbDynamicMessageProto::addField(int32_t number, const std::string& name, int type,  int label) {
+void PbDynamicMessageProto::addField(int32_t number, const std::string& name, int type, int label) {
     auto f = m_data.add_field();
     f->set_name(name);
     f->set_number(number);
@@ -316,31 +325,32 @@ void PbDynamicMessageProto::addField(int32_t number, const std::string& name, in
     f->set_label((google::protobuf::FieldDescriptorProto::Label)label);
 }
 
-#define ADD_FIELD(funcname, type) \
-void PbDynamicMessageProto::add##funcname(int32_t number, const std::string& name, int label) { \
-    addField(number, name, type, label); \
-}
-ADD_FIELD(DoubleField,      TYPE_DOUBLE);  
-ADD_FIELD(FloatField,       TYPE_FLOAT);
-ADD_FIELD(Int64Field,       TYPE_INT64);
-ADD_FIELD(Uint64Field,      TYPE_UINT64);
-ADD_FIELD(Int32Field,       TYPE_INT32);
-ADD_FIELD(Fixed64Field,     TYPE_FIXED64);
-ADD_FIELD(Fixed32Field,     TYPE_FIXED32);
-ADD_FIELD(BoolField,        TYPE_BOOL);
-ADD_FIELD(StringField,      TYPE_STRING);
-ADD_FIELD(GroupField,       TYPE_GROUP);
-ADD_FIELD(BytesField,       TYPE_BYTES);
-ADD_FIELD(Uint32Field,      TYPE_UINT32);
-ADD_FIELD(EnumField,        TYPE_ENUM);
-ADD_FIELD(Sfixed32Field,    TYPE_SFIXED32);
-ADD_FIELD(Sfixed64Field,    TYPE_SFIXED64);
-ADD_FIELD(Sint32Field,      TYPE_SINT32);
-ADD_FIELD(Sint64Field,      TYPE_SINT64);
+#define ADD_FIELD(funcname, type)                                                      \
+    void PbDynamicMessageProto::add##funcname(int32_t number, const std::string& name, \
+                                              int label) {                             \
+        addField(number, name, type, label);                                           \
+    }
+ADD_FIELD(DoubleField, TYPE_DOUBLE);
+ADD_FIELD(FloatField, TYPE_FLOAT);
+ADD_FIELD(Int64Field, TYPE_INT64);
+ADD_FIELD(Uint64Field, TYPE_UINT64);
+ADD_FIELD(Int32Field, TYPE_INT32);
+ADD_FIELD(Fixed64Field, TYPE_FIXED64);
+ADD_FIELD(Fixed32Field, TYPE_FIXED32);
+ADD_FIELD(BoolField, TYPE_BOOL);
+ADD_FIELD(StringField, TYPE_STRING);
+ADD_FIELD(GroupField, TYPE_GROUP);
+ADD_FIELD(BytesField, TYPE_BYTES);
+ADD_FIELD(Uint32Field, TYPE_UINT32);
+ADD_FIELD(EnumField, TYPE_ENUM);
+ADD_FIELD(Sfixed32Field, TYPE_SFIXED32);
+ADD_FIELD(Sfixed64Field, TYPE_SFIXED64);
+ADD_FIELD(Sint32Field, TYPE_SINT32);
+ADD_FIELD(Sint64Field, TYPE_SINT64);
 #undef ADD_FIELD
 
-
-void PbDynamicMessageProto::addMessageField(int32_t number, const std::string& name, const std::string& message_name, int label) {
+void PbDynamicMessageProto::addMessageField(int32_t number, const std::string& name,
+                                            const std::string& message_name, int label) {
     auto f = m_data.add_field();
     f->set_name(name);
     f->set_number(number);
@@ -351,7 +361,8 @@ void PbDynamicMessageProto::addMessageField(int32_t number, const std::string& n
 
 PbDynamicMessageFactory::PbDynamicMessageFactory() {
     m_sourceTree = std::make_shared<google::protobuf::compiler::DiskSourceTree>();
-    m_database = std::make_shared<google::protobuf::compiler::SourceTreeDescriptorDatabase>(m_sourceTree.get());
+    m_database = std::make_shared<google::protobuf::compiler::SourceTreeDescriptorDatabase>(
+        m_sourceTree.get());
     m_pool = std::make_shared<google::protobuf::DescriptorPool>(m_database.get());
     m_factory = std::make_shared<google::protobuf::DynamicMessageFactory>(m_pool.get());
 }
@@ -366,9 +377,10 @@ PbDynamicMessage::ptr PbDynamicMessageFactory::createDynamicEmptyMessage() {
     return createDynamicMessageByName(EMPTY_MESSAGE_NAME);
 }
 
-PbDynamicMessageFactory::ptr PbDynamicMessageFactory::CreateWithUnderlay(PbDynamicMessageFactory::ptr factory) {
+PbDynamicMessageFactory::ptr PbDynamicMessageFactory::CreateWithUnderlay(
+    PbDynamicMessageFactory::ptr factory) {
     auto rt = std::make_shared<PbDynamicMessageFactory>();
-    if(!factory) {
+    if (!factory) {
         factory = std::make_shared<PbDynamicMessageFactory>();
     }
     rt->m_sourceTree = factory->m_sourceTree;
@@ -382,8 +394,9 @@ PbDynamicMessageFactory::ptr PbDynamicMessageFactory::CreateWithUnderlay(PbDynam
     return rt;
 }
 
-void PbDynamicMessageFactory::addProtoPathMap(const std::string& virtual_path, const std::string& disk_path) {
-    if(m_addPath.count(std::make_pair(virtual_path, disk_path)) == 0) {
+void PbDynamicMessageFactory::addProtoPathMap(const std::string& virtual_path,
+                                              const std::string& disk_path) {
+    if (m_addPath.count(std::make_pair(virtual_path, disk_path)) == 0) {
         m_sourceTree->MapPath(virtual_path, disk_path);
     }
 }
@@ -392,25 +405,26 @@ PbDynamicMessageFactory::~PbDynamicMessageFactory() {
     SYLAR_LOG_INFO(g_logger) << "PbDynamicMessageFactory::~PbDynamicMessageFactory";
 }
 
-void PbDynamicMessageFactory::addProtoPathMap(const std::vector<std::pair<std::string, std::string> >& paths) {
-    for(auto& i : paths) {
+void PbDynamicMessageFactory::addProtoPathMap(
+    const std::vector<std::pair<std::string, std::string> >& paths) {
+    for (auto& i : paths) {
         addProtoPathMap(i.first, i.second);
     }
 }
 
-const google::protobuf::FileDescriptor* PbDynamicMessageFactory::findFileByName(const std::string& path) {
+const google::protobuf::FileDescriptor* PbDynamicMessageFactory::findFileByName(
+    const std::string& path) {
     return m_pool->FindFileByName(path);
 }
 
-const google::protobuf::Descriptor* PbDynamicMessageFactory::findMessageTypeByName(const std::string& name) {
+const google::protobuf::Descriptor* PbDynamicMessageFactory::findMessageTypeByName(
+    const std::string& name) {
     return m_pool->FindMessageTypeByName(name);
 }
 
-template<class T, class D>
+template <class T, class D>
 struct DeleteWithData {
-    DeleteWithData(D d)
-        :data(d) {
-    }
+    DeleteWithData(D d) : data(d) {}
     void operator()(T* ptr) {
         delete ptr;
     }
@@ -418,33 +432,36 @@ struct DeleteWithData {
     D data;
 };
 
-std::shared_ptr<google::protobuf::Message> PbDynamicMessageFactory::createMessageByName(const std::string& name) {
+std::shared_ptr<google::protobuf::Message> PbDynamicMessageFactory::createMessageByName(
+    const std::string& name) {
     auto type = findMessageTypeByName(name);
-    if(!type) {
+    if (!type) {
         return nullptr;
     }
-    //SYLAR_LOG_INFO(g_logger) << "type.name=" << type->name() << " - " << type->full_name();
-    return std::shared_ptr<google::protobuf::Message>(m_factory->GetPrototype(type)->New(),
-            DeleteWithData<google::protobuf::Message, ptr>(shared_from_this()));
+    // SYLAR_LOG_INFO(g_logger) << "type.name=" << type->name() << " - " << type->full_name();
+    return std::shared_ptr<google::protobuf::Message>(
+        m_factory->GetPrototype(type)->New(),
+        DeleteWithData<google::protobuf::Message, ptr>(shared_from_this()));
 }
 
 PbDynamicMessage::ptr PbDynamicMessageFactory::createDynamicMessageByName(const std::string& name) {
     auto msg = createMessageByName(name);
-    if(msg) {
+    if (msg) {
         return std::make_shared<PbDynamicMessage>(msg);
     }
     return nullptr;
 }
 
-std::vector<const google::protobuf::FileDescriptor*> PbDynamicMessageFactory::loadDir(const std::string& dir) {
+std::vector<const google::protobuf::FileDescriptor*> PbDynamicMessageFactory::loadDir(
+    const std::string& dir) {
     addProtoPathMap("", dir);
     std::vector<std::string> files;
     std::vector<const google::protobuf::FileDescriptor*> rt;
     sylar::FSUtil::ListAllFile(files, dir, ".proto");
-    for(auto& i : files) {
+    for (auto& i : files) {
         auto name = i.substr(dir.size() + 1);
         auto v = findFileByName(name);
-        if(v) {
+        if (v) {
             rt.push_back(v);
         } else {
             SYLAR_LOG_WARN(g_logger) << "findFileByName " << name << " fail";
@@ -453,7 +470,9 @@ std::vector<const google::protobuf::FileDescriptor*> PbDynamicMessageFactory::lo
     return rt;
 }
 
-const google::protobuf::FileDescriptor* PbDynamicMessageFactory::addPbDynamicProto(PbDynamicMessageProto::ptr proto, const std::string& filename, const std::vector<std::string>& imports) {
+const google::protobuf::FileDescriptor* PbDynamicMessageFactory::addPbDynamicProto(
+    PbDynamicMessageProto::ptr proto, const std::string& filename,
+    const std::vector<std::string>& imports) {
     google::protobuf::FileDescriptorProto file;
 
     file.set_package(proto->getPackage());
@@ -462,29 +481,33 @@ const google::protobuf::FileDescriptor* PbDynamicMessageFactory::addPbDynamicPro
     auto f = file.add_message_type();
     *f = proto->getData();
 
-    for(auto& i : imports) {
+    for (auto& i : imports) {
         file.add_dependency(i);
     }
 
     std::string full_name;
-    if(!filename.empty()) {
+    if (!filename.empty()) {
         full_name = filename;
     } else {
-        full_name = proto->getPackage().empty() ? proto->getName() : proto->getPackage() + "." + proto->getName() + ".proto";
+        full_name = proto->getPackage().empty()
+                        ? proto->getName()
+                        : proto->getPackage() + "." + proto->getName() + ".proto";
     }
     file.set_name(full_name);
     return m_pool->BuildFile(file);
 }
 
-const google::protobuf::FileDescriptor* PbDynamicMessageFactory::addPbDynamicProto(const std::vector<PbDynamicMessageProto::ptr>& protos, const std::string& filename, const std::vector<std::string>& imports) {
+const google::protobuf::FileDescriptor* PbDynamicMessageFactory::addPbDynamicProto(
+    const std::vector<PbDynamicMessageProto::ptr>& protos, const std::string& filename,
+    const std::vector<std::string>& imports) {
     google::protobuf::FileDescriptorProto file;
 
     file.set_syntax("proto3");
-    for(auto& i : imports) {
+    for (auto& i : imports) {
         file.add_dependency(i);
     }
 
-    for(auto& i : protos) {
+    for (auto& i : protos) {
         file.set_package(i->getPackage());
         *file.add_message_type() = i->getData();
     }
@@ -495,10 +518,11 @@ const google::protobuf::FileDescriptor* PbDynamicMessageFactory::addPbDynamicPro
 
 PbDynamicMessageFactoryManager::PbDynamicMessageFactoryManager() {
     m_default = std::make_shared<PbDynamicMessageFactory>();
-    m_default->m_pool.reset((google::protobuf::DescriptorPool*)google::protobuf::DescriptorPool::generated_pool()
-                            ,sylar::nop<google::protobuf::DescriptorPool>);
-    m_default->m_factory = std::make_shared<google::protobuf::DynamicMessageFactory>
-                           (m_default->m_pool.get());
+    m_default->m_pool.reset(
+        (google::protobuf::DescriptorPool*)google::protobuf::DescriptorPool::generated_pool(),
+        sylar::nop<google::protobuf::DescriptorPool>);
+    m_default->m_factory =
+        std::make_shared<google::protobuf::DynamicMessageFactory>(m_default->m_pool.get());
 }
 
 PbDynamicMessageFactory::ptr PbDynamicMessageFactoryManager::getDefault() const {
@@ -516,4 +540,4 @@ void PbDynamicMessageFactoryManager::add(const std::string& name, PbDynamicMessa
     m_datas[name] = v;
 }
 
-}
+}  // namespace sylar

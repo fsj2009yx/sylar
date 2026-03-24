@@ -1,11 +1,10 @@
-#include "sylar/sylar.h"
 #include "sylar/ds/dict.h"
+#include "sylar/sylar.h"
 
 static sylar::Logger::ptr g_logger = SYLAR_LOG_ROOT();
 
 struct PidVid {
-    PidVid(uint32_t p = 0, uint32_t v = 0)
-        :pid(p), vid(v) {}
+    PidVid(uint32_t p = 0, uint32_t v = 0) : pid(p), vid(v) {}
     uint32_t pid;
     uint32_t vid;
 
@@ -16,11 +15,11 @@ struct PidVid {
 
 void gen() {
     sylar::ds::Dict<int, PidVid> tmp;
-    for(int i = 0; i < 500000; ++i) {
+    for (int i = 0; i < 500000; ++i) {
         int32_t len = rand() % 10 + 5;
         int k = rand();
         std::vector<PidVid> pvs;
-        for(int n = 0; n < len; ++n) {
+        for (int n = 0; n < len; ++n) {
             pvs.push_back(PidVid(rand(), rand()));
         }
         tmp.insert(k, pvs.data(), pvs.size());
@@ -31,14 +30,14 @@ void gen() {
 }
 
 void test() {
-    for(int i = 0; i < 10000; ++i) {
+    for (int i = 0; i < 10000; ++i) {
         SYLAR_LOG_INFO(g_logger) << "i=" << i;
         std::ifstream ifs("./dict.data");
         sylar::ds::Dict<int, PidVid> tmp;
-        if(!tmp.readFrom(ifs)) {
+        if (!tmp.readFrom(ifs)) {
             SYLAR_LOG_INFO(g_logger) << "error";
         }
-        if(i % 100 == 0) {
+        if (i % 100 == 0) {
             SYLAR_LOG_INFO(g_logger) << "over..." << (i + 1);
         }
     }

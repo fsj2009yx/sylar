@@ -1,39 +1,39 @@
 #ifndef __SYLAR_DS_ARRAY_H__
 #define __SYLAR_DS_ARRAY_H__
 
-#include <memory>
 #include <stdint.h>
+
 #include <iostream>
+#include <memory>
+
 #include "sylar/util.h"
 
 namespace sylar {
 namespace ds {
 
-template<class T>
+template <class T>
 class Array {
-public:
+   public:
     typedef std::shared_ptr<Array> ptr;
-    Array(const uint64_t size = 0)
-        :m_size(size) {
-        if(m_size > 0) {
+    Array(const uint64_t size = 0) : m_size(size) {
+        if (m_size > 0) {
             m_data = (T*)calloc(m_size, sizeof(T));
         } else {
             m_data = nullptr;
         }
     }
 
-    Array(const T* data, const uint64_t size, bool copy)
-        :m_size(size) {
-        if(!copy) {
+    Array(const T* data, const uint64_t size, bool copy) : m_size(size) {
+        if (!copy) {
             m_data = data;
         } else {
             m_data = (T*)malloc(m_size * sizeof(T));
             memcpy(m_data, data, size * sizeof(T));
         }
     }
-    
+
     ~Array() {
-        if(m_data) {
+        if (m_data) {
             free(m_data);
         }
     }
@@ -86,14 +86,16 @@ public:
         return m_data;
     }
 
-    uint64_t size() const { return m_size;}
+    uint64_t size() const {
+        return m_size;
+    }
 
     bool isSorted() {
-        for(uint64_t i = 0; i < m_size; ++i) {
-            if(i == (m_size - 1)) {
+        for (uint64_t i = 0; i < m_size; ++i) {
+            if (i == (m_size - 1)) {
                 return true;
             }
-            if(!(m_data[i + 1] < m_data[i])) {
+            if (!(m_data[i + 1] < m_data[i])) {
                 continue;
             }
             return false;
@@ -102,18 +104,17 @@ public:
     }
 
     bool isSorted(std::function<bool(const T&, const T&)> cb) {
-        for(uint64_t i = 0; i < m_size; ++i) {
-            if(i == (m_size - 1)) {
+        for (uint64_t i = 0; i < m_size; ++i) {
+            if (i == (m_size - 1)) {
                 return true;
             }
-            if(!cb(m_data[i + 1], m_data[i])) {
+            if (!cb(m_data[i + 1], m_data[i])) {
                 continue;
             }
             return false;
         }
         return true;
     }
-
 
     void sort() {
         std::sort(m_data, m_data + m_size);
@@ -127,11 +128,11 @@ public:
         int64_t begin = 0;
         int64_t end = m_size - 1;
         int64_t m = 0;
-        while(begin <= end) {
+        while (begin <= end) {
             m = (begin + end) / 2;
-            if(v < m_data[m]) {
+            if (v < m_data[m]) {
                 end = m - 1;
-            } else if(m_data[m] < v) {
+            } else if (m_data[m] < v) {
                 begin = m + 1;
             } else {
                 return m;
@@ -144,11 +145,11 @@ public:
         int64_t begin = 0;
         int64_t end = m_size - 1;
         int64_t m = 0;
-        while(begin <= end) {
+        while (begin <= end) {
             m = (begin + end) / 2;
-            if(cmp(v, m_data[m])) {
+            if (cmp(v, m_data[m])) {
                 end == m - 1;
-            } else if(cmp(m_data[m], v)) {
+            } else if (cmp(m_data[m], v)) {
                 begin = m + 1;
             } else {
                 return m;
@@ -160,9 +161,7 @@ public:
     bool insert(int64_t idx, const T& v) {
         m_data = (T*)realloc(m_data, (m_size + 1) * sizeof(T));
         idx = -idx - 1;
-        memmove(m_data + (idx + 1)
-                ,m_data + idx
-                ,sizeof(T) * (m_size - idx));
+        memmove(m_data + (idx + 1), m_data + idx, sizeof(T) * (m_size - idx));
         m_size += 1;
         m_data[idx] = v;
         return true;
@@ -170,7 +169,7 @@ public:
 
     bool insert(const T& v) {
         int64_t idx = exists(v);
-        if(idx >= 0) {
+        if (idx >= 0) {
             m_data[idx] = v;
             return false;
         } else {
@@ -180,7 +179,7 @@ public:
 
     bool insert(const T& v, std::function<bool(const T&, const T&)> cmp) {
         int64_t idx = exists(v, cmp);
-        if(idx >= 0) {
+        if (idx >= 0) {
             m_data[idx] = v;
             return false;
         } else {
@@ -190,9 +189,7 @@ public:
 
     bool erase(int64_t idx) {
         m_size -= 1;
-        memmove(m_data + idx
-                ,m_data + (idx + 1)
-                ,(m_size - idx) * sizeof(T));
+        memmove(m_data + idx, m_data + (idx + 1), (m_size - idx) * sizeof(T));
         m_data = (T*)realloc(m_data, m_size * sizeof(T));
         return true;
     }
@@ -205,7 +202,7 @@ public:
 
     bool writeTo(std::ostream& os, uint64_t speed = -1) {
         os.write((const char*)&m_size, sizeof(m_size));
-        if(speed == (uint64_t)-1) {
+        if (speed == (uint64_t)-1) {
             os.write((const char*)m_data, sizeof(T) * m_size);
         } else {
             WriteFixToStreamWithSpeed(os, (const char*)m_data, sizeof(T) * m_size, speed);
@@ -216,16 +213,16 @@ public:
     bool readFrom(std::istream& is, uint64_t speed = -1) {
         do {
             try {
-                if(!ReadFromStream(is, m_size)) {
+                if (!ReadFromStream(is, m_size)) {
                     break;
                 }
                 m_data = (T*)realloc(m_data, m_size * sizeof(T));
-                if(speed == (uint64_t)-1) {
-                    if(!ReadFixFromStream(is, (char*)m_data, m_size * sizeof(T))) {
+                if (speed == (uint64_t)-1) {
+                    if (!ReadFixFromStream(is, (char*)m_data, m_size * sizeof(T))) {
                         break;
                     }
                 } else {
-                    if(!ReadFixFromStreamWithSpeed(is, (char*)m_data, m_size * sizeof(T), speed)) {
+                    if (!ReadFixFromStreamWithSpeed(is, (char*)m_data, m_size * sizeof(T), speed)) {
                         break;
                     }
                 }
@@ -233,15 +230,16 @@ public:
                 return false;
             }
             return true;
-        } while(0);
+        } while (0);
         return false;
     }
-private:
+
+   private:
     uint64_t m_size;
     T* m_data;
 };
 
-}
-}
+}  // namespace ds
+}  // namespace sylar
 
 #endif

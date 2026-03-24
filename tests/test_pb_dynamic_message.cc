@@ -1,9 +1,10 @@
-#include <google/protobuf/message.h>
-#include <google/protobuf/dynamic_message.h>
+#include <google/protobuf/compiler/importer.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
+#include <google/protobuf/dynamic_message.h>
+#include <google/protobuf/message.h>
 #include <google/protobuf/util/json_util.h>
-#include <google/protobuf/compiler/importer.h>
+
 #include "sylar/sylar.h"
 #include "sylar/util/pb_dynamic_message.h"
 
@@ -14,8 +15,8 @@ using google::protobuf::util::MessageToJsonString;
 std::string PbToString(const google::protobuf::Message& msg) {
     std::string out;
     google::protobuf::util::JsonPrintOptions options;
-    //options.add_whitespace = true;
-    //options.always_print_primitive_fields = true;
+    // options.add_whitespace = true;
+    // options.always_print_primitive_fields = true;
     options.preserve_proto_field_names = true;
     MessageToJsonString(msg, &out, options);
     return out;
@@ -73,26 +74,25 @@ void testPool() {
     st->MapPath("", "");
     st->MapPath("", "tests");
 
-    //google::protobuf::compiler::Importer importer(st, nullptr);
-    //auto pb = importer.Import("tests/test.proto");
-    //SYLAR_LOG_INFO(g_logger) << "==== pb=" << pb << (pb ? pb->DebugString() : "");
-    //sleep(20);
-    //pb = importer.Import("tests/test.proto");
-    //SYLAR_LOG_INFO(g_logger) << "==== pb=" << pb << (pb ? pb->DebugString() : "");
+    // google::protobuf::compiler::Importer importer(st, nullptr);
+    // auto pb = importer.Import("tests/test.proto");
+    // SYLAR_LOG_INFO(g_logger) << "==== pb=" << pb << (pb ? pb->DebugString() : "");
+    // sleep(20);
+    // pb = importer.Import("tests/test.proto");
+    // SYLAR_LOG_INFO(g_logger) << "==== pb=" << pb << (pb ? pb->DebugString() : "");
 
-    //pool->Import("tests/test.proto");
-    //auto pb = importer.pool()->FindFileByName("tests/test.proto");
+    // pool->Import("tests/test.proto");
+    // auto pb = importer.pool()->FindFileByName("tests/test.proto");
     std::vector<std::string> files = {
-        "test.proto",
-        "test2.proto",
+        "test.proto", "test2.proto",
         //"tests/test.proto",
     };
-    for(auto& i : files) {
+    for (auto& i : files) {
         auto pb = pool->FindFileByName(i);
         std::cout << i << " - " << pb << std::endl;
-        //delete pb;
+        // delete pb;
     }
-    //auto pb = pool->FindFileByName("/root/workspace/sylar/tests/test.proto");
+    // auto pb = pool->FindFileByName("/root/workspace/sylar/tests/test.proto");
     SYLAR_LOG_INFO(g_logger) << "msg=" << pool->FindMessageTypeByName("test.HelloRequest");
     SYLAR_LOG_INFO(g_logger) << "msg=" << pool->FindMessageTypeByName("test2.Test2");
 }
@@ -102,65 +102,65 @@ void testSource() {
     sourceTree.MapPath("", "tests");
     google::protobuf::compiler::Importer importer(&sourceTree, NULL);
     importer.Import("test.proto");
-    SYLAR_LOG_INFO(g_logger) << "pb=" << importer.pool()->FindMessageTypeByName("test.HelloRequest");
+    SYLAR_LOG_INFO(g_logger) << "pb="
+                             << importer.pool()->FindMessageTypeByName("test.HelloRequest");
 }
 
 void test_pb_dynamic_message() {
-    //sylar::util::PbDynamicMessageFactoryMgr::GetInstance()->
+    // sylar::util::PbDynamicMessageFactoryMgr::GetInstance()->
     std::shared_ptr<google::protobuf::Message> msg;
     std::shared_ptr<google::protobuf::Message> msg2;
     {
-        sylar::PbDynamicMessageFactory::ptr item = std::make_shared<sylar::PbDynamicMessageFactory>();
+        sylar::PbDynamicMessageFactory::ptr item =
+            std::make_shared<sylar::PbDynamicMessageFactory>();
 
         item->addProtoPathMap("", "");
-        //item->addProtoPathMap("", "tests");
+        // item->addProtoPathMap("", "tests");
 
-        //std::vector<std::string> files = {
-        //    "test.proto",
-        //    "test2.proto",
-        //};
-        //for(auto& i : files) {
-        //    auto pb = item->findFileByName(i);
-        //    std::cout << i << " - " << pb << std::endl;
-        //}
-
+        // std::vector<std::string> files = {
+        //     "test.proto",
+        //     "test2.proto",
+        // };
+        // for(auto& i : files) {
+        //     auto pb = item->findFileByName(i);
+        //     std::cout << i << " - " << pb << std::endl;
+        // }
 
         auto rt = item->loadDir("tests");
-        for(auto i : rt) {
+        for (auto i : rt) {
             SYLAR_LOG_INFO(g_logger) << "loaded: " << i->name();
         }
         msg = item->createMessageByName("test2.Test2");
         msg2 = item->createMessageByName("test2.Test2");
     }
 
-        sylar::PbDynamicMessage::ptr dm = std::make_shared<sylar::PbDynamicMessage>(msg);
-        dm->setInt32Value("id", 100);
-        dm->setStringValue("name", "sylar");
-        auto sub = dm->mutableMessage("request");
-        sub->setStringValue("id", "sylar-id");
-        sub->addUnknowFieldString(2, "sylar-msg");
+    sylar::PbDynamicMessage::ptr dm = std::make_shared<sylar::PbDynamicMessage>(msg);
+    dm->setInt32Value("id", 100);
+    dm->setStringValue("name", "sylar");
+    auto sub = dm->mutableMessage("request");
+    sub->setStringValue("id", "sylar-id");
+    sub->addUnknowFieldString(2, "sylar-msg");
 
-        auto fs = dm->listFields();
-        for(auto& i : fs) {
-            SYLAR_LOG_INFO(g_logger) << "---" << i->name();
-        }
+    auto fs = dm->listFields();
+    for (auto& i : fs) {
+        SYLAR_LOG_INFO(g_logger) << "---" << i->name();
+    }
 
-    SYLAR_LOG_INFO(g_logger) << "msg=" << msg << " - " << msg->DebugString()
-        << " - " << sylar::PBToJsonString(*msg) << " - "
-        << dm->getDataSize();
+    SYLAR_LOG_INFO(g_logger) << "msg=" << msg << " - " << msg->DebugString() << " - "
+                             << sylar::PBToJsonString(*msg) << " - " << dm->getDataSize();
 
     std::string tmp;
     msg->SerializeToString(&tmp);
     msg2->ParseFromString(tmp);
 
-    SYLAR_LOG_INFO(g_logger) << "msg2=" << msg2 << " - " << msg2->DebugString()
-        << " - " << sylar::PBToJsonString(*msg2);
+    SYLAR_LOG_INFO(g_logger) << "msg2=" << msg2 << " - " << msg2->DebugString() << " - "
+                             << sylar::PBToJsonString(*msg2);
 }
 
 void test_pb_dynamic_proto() {
     auto item = sylar::PbDynamicMessageFactory::CreateWithUnderlay();
     auto fs = item->loadDir("tests");
-    for(auto i : fs) {
+    for (auto i : fs) {
         SYLAR_LOG_INFO(g_logger) << "***" << i->DebugString();
     }
 
@@ -175,8 +175,8 @@ void test_pb_dynamic_proto() {
     auto f = item->addPbDynamicProto(proto, "", {"test2.proto"});
     std::cout << f->DebugString() << std::endl;
 
-    //f = item->addPbDynamicProto(proto, "", {"test2.proto"});
-    //std::cout << f->DebugString() << std::endl;
+    // f = item->addPbDynamicProto(proto, "", {"test2.proto"});
+    // std::cout << f->DebugString() << std::endl;
 
     auto m = item->createDynamicMessageByName("DPMessage");
     m->setInt64Value("id", 1024);
@@ -193,9 +193,8 @@ void test_pb_dynamic_proto() {
     mm->addUnknowFieldMessage(3, *de->getData());
 
     auto d = m->getData();
-    SYLAR_LOG_INFO(g_logger) << "==== " << d->DebugString()
-        << " - " << sylar::PBToJsonString(*d)
-        << " - " << PbToString(*d);
+    SYLAR_LOG_INFO(g_logger) << "==== " << d->DebugString() << " - " << sylar::PBToJsonString(*d)
+                             << " - " << PbToString(*d);
 
     SYLAR_LOG_INFO(g_logger) << sylar::ToSnakeString("ABCTestInfo");
     SYLAR_LOG_INFO(g_logger) << sylar::ToCamelString("abc_test_info");
@@ -222,8 +221,8 @@ int main(int argc, char** argv) {
     SYLAR_LOG_INFO(g_logger) << file.DebugString();
 
     testPool();
-    //testSource();
-    //test_pb_dynamic_message();
-    //test_pb_dynamic_proto();
+    // testSource();
+    // test_pb_dynamic_message();
+    // test_pb_dynamic_proto();
     return 0;
 }

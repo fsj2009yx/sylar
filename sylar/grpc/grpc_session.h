@@ -8,21 +8,24 @@ namespace grpc {
 
 class GrpcServer;
 class GrpcSession : public http2::Http2SocketStream {
-public:
+   public:
     typedef std::shared_ptr<GrpcSession> ptr;
     GrpcSession(Socket::ptr sock, GrpcServer* server);
     ~GrpcSession();
-protected:
+
+   protected:
     GrpcSession::ptr getSelf();
-protected:
+
+   protected:
     virtual void handleRequest(http::HttpRequest::ptr req, http2::Http2Stream::ptr stream);
     AsyncSocketStream::Ctx::ptr onStreamClose(http2::Http2Stream::ptr stream) override;
     AsyncSocketStream::Ctx::ptr onHeaderEnd(http2::Http2Stream::ptr stream) override;
-protected:
+
+   protected:
     GrpcServer* m_server;
 };
 
-}
-}
+}  // namespace grpc
+}  // namespace sylar
 
 #endif

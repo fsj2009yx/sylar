@@ -1,18 +1,17 @@
 #include "config_servlet.h"
+
 #include "sylar/config.h"
 
 namespace sylar {
 namespace http {
 
-ConfigServlet::ConfigServlet()
-    :Servlet("ConfigServlet") {
-}
+ConfigServlet::ConfigServlet() : Servlet("ConfigServlet") {}
 
-int32_t ConfigServlet::handle(sylar::http::HttpRequest::ptr request
-                              ,sylar::http::HttpResponse::ptr response
-                              ,sylar::SocketStream::ptr session) {
+int32_t ConfigServlet::handle(sylar::http::HttpRequest::ptr request,
+                              sylar::http::HttpResponse::ptr response,
+                              sylar::SocketStream::ptr session) {
     std::string type = request->getParam("type");
-    if(type == "json") {
+    if (type == "json") {
         response->setHeader("Content-Type", "text/json charset=utf-8");
     } else {
         response->setHeader("Content-Type", "text/yaml charset=utf-8");
@@ -22,15 +21,15 @@ int32_t ConfigServlet::handle(sylar::http::HttpRequest::ptr request
         YAML::Node n;
         try {
             n = YAML::Load(base->toString());
-        } catch(...) {
+        } catch (...) {
             return;
         }
         node[base->getName()] = n;
         node[base->getName() + "$description"] = base->getDescription();
     });
-    if(type == "json") {
+    if (type == "json") {
         Json::Value jvalue;
-        if(YamlToJson(node, jvalue)) {
+        if (YamlToJson(node, jvalue)) {
             response->setBody(JsonUtil::ToString(jvalue));
             return 0;
         }
@@ -41,5 +40,5 @@ int32_t ConfigServlet::handle(sylar::http::HttpRequest::ptr request
     return 0;
 }
 
-}
-}
+}  // namespace http
+}  // namespace sylar

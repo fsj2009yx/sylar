@@ -1,43 +1,42 @@
 #include "ws_session.h"
-#include "sylar/log.h"
-#include "sylar/endian.h"
+
 #include <string.h>
+
+#include "sylar/endian.h"
+#include "sylar/log.h"
 
 namespace sylar {
 namespace http {
 
 static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
-sylar::ConfigVar<uint32_t>::ptr g_websocket_message_max_size
-    = sylar::Config::Lookup("websocket.message.max_size"
-            ,(uint32_t) 1024 * 1024 * 32, "websocket message max size");
+sylar::ConfigVar<uint32_t>::ptr g_websocket_message_max_size = sylar::Config::Lookup(
+    "websocket.message.max_size", (uint32_t)1024 * 1024 * 32, "websocket message max size");
 
-WSSession::WSSession(Socket::ptr sock, bool owner)
-    :HttpSession(sock, owner) {
-}
+WSSession::WSSession(Socket::ptr sock, bool owner) : HttpSession(sock, owner) {}
 
 HttpRequest::ptr WSSession::handleShake() {
     HttpRequest::ptr req;
     do {
         req = recvRequest();
-        if(!req) {
+        if (!req) {
             SYLAR_LOG_INFO(g_logger) << "invalid http request";
             break;
         }
-        if(strcasecmp(req->getHeader("Upgrade").c_str(), "websocket")) {
+        if (strcasecmp(req->getHeader("Upgrade").c_str(), "websocket")) {
             SYLAR_LOG_INFO(g_logger) << "http header Upgrade != websocket";
             break;
         }
-        if(strcasecmp(req->getHeader("Connection").c_str(), "Upgrade")) {
+        if (strcasecmp(req->getHeader("Connection").c_str(), "Upgrade")) {
             SYLAR_LOG_INFO(g_logger) << "http header Connection != Upgrade";
             break;
         }
-        if(req->getHeaderAs<int>("Sec-webSocket-Version") != 13) {
+        if (req->getHeaderAs<int>("Sec-webSocket-Version") != 13) {
             SYLAR_LOG_INFO(g_logger) << "http header Sec-webSocket-Version != 13";
             break;
         }
         std::string key = req->getHeader("Sec-WebSocket-Key");
-        if(key.empty()) {
+        if (key.empty()) {
             SYLAR_LOG_INFO(g_logger) << "http header Sec-WebSocket-Key = null";
             break;
         }
@@ -58,28 +57,20 @@ HttpRequest::ptr WSSession::handleShake() {
         SYLAR_LOG_DEBUG(g_logger) << *req;
         SYLAR_LOG_DEBUG(g_logger) << *rsp;
         return req;
-    } while(false);
-    if(req) {
+    } while (false);
+    if (req) {
         SYLAR_LOG_INFO(g_logger) << *req;
     }
     return nullptr;
 }
 
 WSFrameMessage::WSFrameMessage(int opcode, const std::string& data)
-    :m_opcode(opcode)
-    ,m_data(data) {
-}
+    : m_opcode(opcode), m_data(data) {}
 
 std::string WSFrameHead::toString() const {
     std::stringstream ss;
-    ss << "[WSFrameHead fin=" << fin
-       << " rsv1=" << rsv1
-       << " rsv2=" << rsv2
-       << " rsv3=" << rsv3
-       << " opcode=" << opcode
-       << " mask=" << mask
-       << " payload=" << payload
-       << "]";
+    ss << "[WSFrameHead fin=" << fin << " rsv1=" << rsv1 << " rsv2=" << rsv2 << " rsv3=" << rsv3
+       << " opcode=" << opcode << " mask=" << mask << " payload=" << payload << "]";
     return ss.str();
 }
 
@@ -105,34 +96,34 @@ WSFrameMessage::ptr WSRecvMessage(Stream* stream, bool client) {
     int cur_len = 0;
     do {
         WSFrameHead ws_head;
-        if(stream->readFixSize(&ws_head, sizeof(ws_head)) <= 0) {
+        if (stream->readFixSize(&ws_head, sizeof(ws_head)) <= 0) {
             break;
         }
         SYLAR_LOG_DEBUG(g_logger) << "WSFrameHead " << ws_head.toString();
 
-        if(ws_head.opcode == WSFrameHead::PING) {
+        if (ws_head.opcode == WSFrameHead::PING) {
             SYLAR_LOG_INFO(g_logger) << "PING";
-            if(WSPong(stream) <= 0) {
+            if (WSPong(stream) <= 0) {
                 break;
             }
-        } else if(ws_head.opcode == WSFrameHead::PONG) {
-        } else if(ws_head.opcode == WSFrameHead::CONTINUE
-                || ws_head.opcode == WSFrameHead::TEXT_FRAME
-                || ws_head.opcode == WSFrameHead::BIN_FRAME) {
-            if(!client && !ws_head.mask) {
+        } else if (ws_head.opcode == WSFrameHead::PONG) {
+        } else if (ws_head.opcode == WSFrameHead::CONTINUE ||
+                   ws_head.opcode == WSFrameHead::TEXT_FRAME ||
+                   ws_head.opcode == WSFrameHead::BIN_FRAME) {
+            if (!client && !ws_head.mask) {
                 SYLAR_LOG_INFO(g_logger) << "WSFrameHead mask != 1";
                 break;
             }
             uint64_t length = 0;
-            if(ws_head.payload == 126) {
+            if (ws_head.payload == 126) {
                 uint16_t len = 0;
-                if(stream->readFixSize(&len, sizeof(len)) <= 0) {
+                if (stream->readFixSize(&len, sizeof(len)) <= 0) {
                     break;
                 }
                 length = sylar::byteswapOnLittleEndian(len);
-            } else if(ws_head.payload == 127) {
+            } else if (ws_head.payload == 127) {
                 uint64_t len = 0;
-                if(stream->readFixSize(&len, sizeof(len)) <= 0) {
+                if (stream->readFixSize(&len, sizeof(len)) <= 0) {
                     break;
                 }
                 length = sylar::byteswapOnLittleEndian(len);
@@ -140,42 +131,42 @@ WSFrameMessage::ptr WSRecvMessage(Stream* stream, bool client) {
                 length = ws_head.payload;
             }
 
-            if((cur_len + length) >= g_websocket_message_max_size->getValue()) {
-                SYLAR_LOG_WARN(g_logger) << "WSFrameMessage length > "
-                    << g_websocket_message_max_size->getValue()
+            if ((cur_len + length) >= g_websocket_message_max_size->getValue()) {
+                SYLAR_LOG_WARN(g_logger)
+                    << "WSFrameMessage length > " << g_websocket_message_max_size->getValue()
                     << " (" << (cur_len + length) << ")";
                 break;
             }
 
             char mask[4] = {0};
-            if(ws_head.mask) {
-                if(stream->readFixSize(mask, sizeof(mask)) <= 0) {
+            if (ws_head.mask) {
+                if (stream->readFixSize(mask, sizeof(mask)) <= 0) {
                     break;
                 }
             }
             data.resize(cur_len + length);
-            if(stream->readFixSize(&data[cur_len], length) <= 0) {
+            if (stream->readFixSize(&data[cur_len], length) <= 0) {
                 break;
             }
-            if(ws_head.mask) {
-                for(int i = 0; i < (int)length; ++i) {
+            if (ws_head.mask) {
+                for (int i = 0; i < (int)length; ++i) {
                     data[cur_len + i] ^= mask[i % 4];
                 }
             }
             cur_len += length;
 
-            if(!opcode && ws_head.opcode != WSFrameHead::CONTINUE) {
+            if (!opcode && ws_head.opcode != WSFrameHead::CONTINUE) {
                 opcode = ws_head.opcode;
             }
 
-            if(ws_head.fin) {
+            if (ws_head.fin) {
                 SYLAR_LOG_DEBUG(g_logger) << data;
                 return std::make_shared<WSFrameMessage>(opcode, std::move(data));
             }
         } else {
             SYLAR_LOG_DEBUG(g_logger) << "invalid opcode=" << ws_head.opcode;
         }
-    } while(true);
+    } while (true);
     stream->close();
     return nullptr;
 }
@@ -188,47 +179,47 @@ int32_t WSSendMessage(Stream* stream, WSFrameMessage::ptr msg, bool client, bool
         ws_head.opcode = msg->getOpcode();
         ws_head.mask = client;
         uint64_t size = msg->getData().size();
-        if(size < 126) {
+        if (size < 126) {
             ws_head.payload = size;
-        } else if(size < 65536) {
+        } else if (size < 65536) {
             ws_head.payload = 126;
         } else {
             ws_head.payload = 127;
         }
-        
-        if(stream->writeFixSize(&ws_head, sizeof(ws_head)) <= 0) {
+
+        if (stream->writeFixSize(&ws_head, sizeof(ws_head)) <= 0) {
             break;
         }
-        if(ws_head.payload == 126) {
+        if (ws_head.payload == 126) {
             uint16_t len = size;
             len = sylar::byteswapOnLittleEndian(len);
-            if(stream->writeFixSize(&len, sizeof(len)) <= 0) {
+            if (stream->writeFixSize(&len, sizeof(len)) <= 0) {
                 break;
             }
-        } else if(ws_head.payload == 127) {
+        } else if (ws_head.payload == 127) {
             uint64_t len = sylar::byteswapOnLittleEndian(size);
-            if(stream->writeFixSize(&len, sizeof(len)) <= 0) {
+            if (stream->writeFixSize(&len, sizeof(len)) <= 0) {
                 break;
             }
         }
-        if(client) {
+        if (client) {
             char mask[4];
             uint32_t rand_value = rand();
             memcpy(mask, &rand_value, sizeof(mask));
             std::string& data = msg->getData();
-            for(size_t i = 0; i < data.size(); ++i) {
+            for (size_t i = 0; i < data.size(); ++i) {
                 data[i] ^= mask[i % 4];
             }
 
-            if(stream->writeFixSize(mask, sizeof(mask)) <= 0) {
+            if (stream->writeFixSize(mask, sizeof(mask)) <= 0) {
                 break;
             }
         }
-        if(stream->writeFixSize(msg->getData().c_str(), size) <= 0) {
+        if (stream->writeFixSize(msg->getData().c_str(), size) <= 0) {
             break;
         }
         return size + sizeof(ws_head);
-    } while(0);
+    } while (0);
     stream->close();
     return -1;
 }
@@ -243,7 +234,7 @@ int32_t WSPing(Stream* stream) {
     ws_head.fin = 1;
     ws_head.opcode = WSFrameHead::PING;
     int32_t v = stream->writeFixSize(&ws_head, sizeof(ws_head));
-    if(v <= 0) {
+    if (v <= 0) {
         stream->close();
     }
     return v;
@@ -255,11 +246,11 @@ int32_t WSPong(Stream* stream) {
     ws_head.fin = 1;
     ws_head.opcode = WSFrameHead::PONG;
     int32_t v = stream->writeFixSize(&ws_head, sizeof(ws_head));
-    if(v <= 0) {
+    if (v <= 0) {
         stream->close();
     }
     return v;
 }
 
-}
-}
+}  // namespace http
+}  // namespace sylar

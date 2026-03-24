@@ -17,14 +17,14 @@ void test_write() {
     auto int64arr = builder->getColumnAs<arrow::ListBuilder>("int64arr");
     auto map_int_str = builder->getColumnAs<arrow::MapBuilder>("map_int_str");
 
-    for(int i = 0; i < 10; ++i) {
-        if(i == 0) {
+    for (int i = 0; i < 10; ++i) {
+        if (i == 0) {
             id->AppendNull();
         } else {
             id->Append(i + 1000);
         }
         name->Append("name_" + std::to_string(1000 + i));
-        switch(i % 3) {
+        switch (i % 3) {
             case 0:
                 sex->Append(1);
                 break;
@@ -35,10 +35,10 @@ void test_write() {
                 sex->AppendNull();
                 break;
         }
-        if(i % 3 == 0) {
+        if (i % 3 == 0) {
             int64arr->AppendNull();
             map_int_str->AppendEmptyValue();
-        } else if(i % 3 == 1) {
+        } else if (i % 3 == 1) {
             int64arr->AppendEmptyValue();
             map_int_str->Append();
 
@@ -49,15 +49,15 @@ void test_write() {
             item->Append("value_" + std::to_string(i * 1000));
             key->Append(i * 1000 + 1);
             item->Append("value_" + std::to_string(i * 1000 + 1));
-        } else if(i % 3 == 2) {
+        } else if (i % 3 == 2) {
             map_int_str->AppendNull();
-            //int64arr->AppendEmptyValue();
-            //arrow::Int64Builder b;
-            //b.AppendValues({i* 100 + 1, i * 100 + 2});
-            //std::shared_ptr<arrow::Array> a;
-            //b.Finish(&a);
-            //int64arr->AppendArraySlice(*a->data(), 0, a->length());
-            //int64arr->value_builder();
+            // int64arr->AppendEmptyValue();
+            // arrow::Int64Builder b;
+            // b.AppendValues({i* 100 + 1, i * 100 + 2});
+            // std::shared_ptr<arrow::Array> a;
+            // b.Finish(&a);
+            // int64arr->AppendArraySlice(*a->data(), 0, a->length());
+            // int64arr->value_builder();
             int64arr->Append(true);
             auto t = dynamic_cast<arrow::Int64Builder*>(int64arr->value_builder());
             t->Append(i * 100 + 1);
@@ -83,7 +83,7 @@ void test_write() {
 }
 
 void test_read(int argc, char** argv) {
-    if(argc < 2) {
+    if (argc < 2) {
         SYLAR_LOG_INFO(g_logger) << "use as[" << argv[0] << " parquet_file]";
         return;
     }
@@ -97,7 +97,7 @@ void test_read(int argc, char** argv) {
 
 int main(int argc, char** argv) {
     test_read(argc, argv);
-    //test_write();
+    // test_write();
     return 0;
     auto reader = sylar::ParquetFileReader::Open("df.parquet.gzip");
     auto schema = reader->getSchema();
@@ -110,24 +110,21 @@ int main(int argc, char** argv) {
 
     auto arr = tab->getColumnData(0);
     auto i64arr = arr->chunkAs<arrow::Int64Array>(0);
-    for(auto it = i64arr->begin();
-            it != i64arr->end(); ++it) {
+    for (auto it = i64arr->begin(); it != i64arr->end(); ++it) {
         std::cout << **it << "\t";
     }
     std::cout << std::endl;
 
     arr = tab->getColumnData(2);
-    //auto i64listarr = arr->chunkAs<arrow::ListArray>(0);
+    // auto i64listarr = arr->chunkAs<arrow::ListArray>(0);
     auto i64listarr = arr->chunkListType(0);
-    for(auto i = 0;
-            i != i64listarr->getLength(); ++i) {
-        if(!i64listarr->isNull(i)) {
-            //auto i64 = std::dynamic_pointer_cast<arrow::Int64Array>(i64listarr->value_slice(i));
+    for (auto i = 0; i != i64listarr->getLength(); ++i) {
+        if (!i64listarr->isNull(i)) {
+            // auto i64 = std::dynamic_pointer_cast<arrow::Int64Array>(i64listarr->value_slice(i));
             auto i64 = i64listarr->getValueAs<arrow::Int64Array>(i);
             std::cout << "[";
-            for(auto it = i64->begin();
-                    it != i64->end(); ++it) {
-                if(*it) {
+            for (auto it = i64->begin(); it != i64->end(); ++it) {
+                if (*it) {
                     std::cout << **it << "\t";
                 } else {
                     std::cout << "null" << "\t";

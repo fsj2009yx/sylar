@@ -1,18 +1,19 @@
 #ifndef __SYLAR_MUTEX_H__
 #define __SYLAR_MUTEX_H__
 
-#include <thread>
-#include <functional>
-#include <memory>
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdint.h>
-#include <atomic>
-#include <list>
 #include <tbb/spin_rw_mutex.h>
 
-#include "noncopyable.h"
+#include <atomic>
+#include <functional>
+#include <list>
+#include <memory>
+#include <thread>
+
 #include "fiber.h"
+#include "noncopyable.h"
 
 namespace sylar {
 
@@ -20,7 +21,7 @@ namespace sylar {
  * @brief 信号量
  */
 class Semaphore : Noncopyable {
-public:
+   public:
     /**
      * @brief 构造函数
      * @param[in] count 信号量值的大小
@@ -41,22 +42,22 @@ public:
      * @brief 释放信号量
      */
     void notify();
-private:
+
+   private:
     sem_t m_semaphore;
 };
 
 /**
  * @brief 局部锁的模板实现
  */
-template<class T>
+template <class T>
 struct ScopedLockImpl {
-public:
+   public:
     /**
      * @brief 构造函数
      * @param[in] mutex Mutex
      */
-    ScopedLockImpl(T& mutex)
-        :m_mutex(mutex) {
+    ScopedLockImpl(T& mutex) : m_mutex(mutex) {
         m_mutex.lock();
         m_locked = true;
     }
@@ -72,7 +73,7 @@ public:
      * @brief 加锁
      */
     void lock() {
-        if(!m_locked) {
+        if (!m_locked) {
             m_mutex.lock();
             m_locked = true;
         }
@@ -82,12 +83,13 @@ public:
      * @brief 解锁
      */
     void unlock() {
-        if(m_locked) {
+        if (m_locked) {
             m_mutex.unlock();
             m_locked = false;
         }
     }
-private:
+
+   private:
     /// mutex
     T& m_mutex;
     /// 是否已上锁
@@ -97,15 +99,14 @@ private:
 /**
  * @brief 局部读锁模板实现
  */
-template<class T>
+template <class T>
 struct ReadScopedLockImpl {
-public:
+   public:
     /**
      * @brief 构造函数
      * @param[in] mutex 读写锁
      */
-    ReadScopedLockImpl(T& mutex)
-        :m_mutex(mutex) {
+    ReadScopedLockImpl(T& mutex) : m_mutex(mutex) {
         m_mutex.rdlock();
         m_locked = true;
     }
@@ -121,7 +122,7 @@ public:
      * @brief 上读锁
      */
     void lock() {
-        if(!m_locked) {
+        if (!m_locked) {
             m_mutex.rdlock();
             m_locked = true;
         }
@@ -131,12 +132,13 @@ public:
      * @brief 释放锁
      */
     void unlock() {
-        if(m_locked) {
+        if (m_locked) {
             m_mutex.unlock();
             m_locked = false;
         }
     }
-private:
+
+   private:
     /// mutex
     T& m_mutex;
     /// 是否已上锁
@@ -146,15 +148,14 @@ private:
 /**
  * @brief 局部写锁模板实现
  */
-template<class T>
+template <class T>
 struct WriteScopedLockImpl {
-public:
+   public:
     /**
      * @brief 构造函数
      * @param[in] mutex 读写锁
      */
-    WriteScopedLockImpl(T& mutex)
-        :m_mutex(mutex) {
+    WriteScopedLockImpl(T& mutex) : m_mutex(mutex) {
         m_mutex.wrlock();
         m_locked = true;
     }
@@ -170,7 +171,7 @@ public:
      * @brief 上写锁
      */
     void lock() {
-        if(!m_locked) {
+        if (!m_locked) {
             m_mutex.wrlock();
             m_locked = true;
         }
@@ -180,12 +181,13 @@ public:
      * @brief 解锁
      */
     void unlock() {
-        if(m_locked) {
+        if (m_locked) {
             m_mutex.unlock();
             m_locked = false;
         }
     }
-private:
+
+   private:
     /// Mutex
     T& m_mutex;
     /// 是否已上锁
@@ -196,7 +198,7 @@ private:
  * @brief 互斥量
  */
 class Mutex : Noncopyable {
-public: 
+   public:
     /// 局部锁
     typedef ScopedLockImpl<Mutex> Lock;
 
@@ -227,7 +229,8 @@ public:
     void unlock() {
         pthread_mutex_unlock(&m_mutex);
     }
-private:
+
+   private:
     /// mutex
     pthread_mutex_t m_mutex;
 };
@@ -235,8 +238,8 @@ private:
 /**
  * @brief 空锁(用于调试)
  */
-class NullMutex : Noncopyable{
-public:
+class NullMutex : Noncopyable {
+   public:
     /// 局部锁
     typedef ScopedLockImpl<NullMutex> Lock;
 
@@ -264,9 +267,8 @@ public:
 /**
  * @brief 读写互斥量
  */
-class RWMutex : Noncopyable{
-public:
-
+class RWMutex : Noncopyable {
+   public:
     /// 局部读锁
     typedef ReadScopedLockImpl<RWMutex> ReadLock;
 
@@ -279,7 +281,7 @@ public:
     RWMutex() {
         pthread_rwlock_init(&m_lock, nullptr);
     }
-    
+
     /**
      * @brief 析构函数
      */
@@ -307,7 +309,8 @@ public:
     void unlock() {
         pthread_rwlock_unlock(&m_lock);
     }
-private:
+
+   private:
     /// 读写锁
     pthread_rwlock_t m_lock;
 };
@@ -316,7 +319,7 @@ private:
  * @brief 空读写锁(用于调试)
  */
 class NullRWMutex : Noncopyable {
-public:
+   public:
     /// 局部读锁
     typedef ReadScopedLockImpl<NullRWMutex> ReadLock;
     /// 局部写锁
@@ -350,7 +353,7 @@ public:
  * @brief 自旋锁
  */
 class Spinlock : Noncopyable {
-public:
+   public:
     /// 局部锁
     typedef ScopedLockImpl<Spinlock> Lock;
 
@@ -381,7 +384,8 @@ public:
     void unlock() {
         pthread_spin_unlock(&m_mutex);
     }
-private:
+
+   private:
     /// 自旋锁
     pthread_spinlock_t m_mutex;
 };
@@ -390,7 +394,7 @@ private:
  * @brief 原子锁
  */
 class CASLock : Noncopyable {
-public:
+   public:
     /// 局部锁
     typedef ScopedLockImpl<CASLock> Lock;
 
@@ -404,14 +408,13 @@ public:
     /**
      * @brief 析构函数
      */
-    ~CASLock() {
-    }
+    ~CASLock() {}
 
     /**
      * @brief 上锁
      */
     void lock() {
-        while(std::atomic_flag_test_and_set_explicit(&m_mutex, std::memory_order_acquire));
+        while (std::atomic_flag_test_and_set_explicit(&m_mutex, std::memory_order_acquire));
     }
 
     /**
@@ -420,7 +423,8 @@ public:
     void unlock() {
         std::atomic_flag_clear_explicit(&m_mutex, std::memory_order_release);
     }
-private:
+
+   private:
     /// 原子状态
     volatile std::atomic_flag m_mutex;
 };
@@ -428,9 +432,8 @@ private:
 /**
  * @brief 读写自旋锁
  */
-class RWSpinlock : Noncopyable{
-public:
-
+class RWSpinlock : Noncopyable {
+   public:
     /// 局部读锁
     typedef ReadScopedLockImpl<RWSpinlock> ReadLock;
 
@@ -440,14 +443,12 @@ public:
     /**
      * @brief 构造函数
      */
-    RWSpinlock() {
-    }
-    
+    RWSpinlock() {}
+
     /**
      * @brief 析构函数
      */
-    ~RWSpinlock() {
-    }
+    ~RWSpinlock() {}
 
     /**
      * @brief 上读锁
@@ -469,23 +470,22 @@ public:
      * @brief 解锁
      */
     void unlock() {
-        if(m_isRead) {
+        if (m_isRead) {
             m_lock.unlock_shared();
         } else {
             m_lock.unlock();
         }
     }
-private:
+
+   private:
     /// 读写锁
     tbb::spin_rw_mutex m_lock;
     bool m_isRead = false;
 };
 
-
-
 class Scheduler;
 class FiberSemaphore : Noncopyable {
-public:
+   public:
     typedef Spinlock MutexType;
 
     FiberSemaphore(size_t initial_concurrency = 0);
@@ -496,16 +496,19 @@ public:
     void notify();
     void notifyAll();
 
-    size_t getConcurrency() const { return m_concurrency;}
-    void reset() { m_concurrency = 0;}
-private:
+    size_t getConcurrency() const {
+        return m_concurrency;
+    }
+    void reset() {
+        m_concurrency = 0;
+    }
+
+   private:
     MutexType m_mutex;
     std::list<std::pair<Scheduler*, Fiber::ptr> > m_waiters;
     size_t m_concurrency;
 };
 
-
-
-}
+}  // namespace sylar
 
 #endif

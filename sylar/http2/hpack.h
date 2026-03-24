@@ -1,21 +1,21 @@
 #ifndef __SYLAR_HTTP2_HPACK_H__
 #define __SYLAR_HTTP2_HPACK_H__
 
-#include "sylar/bytearray.h"
 #include "dynamic_table.h"
+#include "sylar/bytearray.h"
 
 namespace sylar {
 namespace http2 {
 
 enum class IndexType {
-    INDEXED                         = 0,
-    WITH_INDEXING_INDEXED_NAME      = 1,
-    WITH_INDEXING_NEW_NAME          = 2,
-    WITHOUT_INDEXING_INDEXED_NAME   = 3,
-    WITHOUT_INDEXING_NEW_NAME       = 4,
-    NERVER_INDEXED_INDEXED_NAME      = 5,
-    NERVER_INDEXED_NEW_NAME         = 6,
-    ERROR                           = 7
+    INDEXED = 0,
+    WITH_INDEXING_INDEXED_NAME = 1,
+    WITH_INDEXING_NEW_NAME = 2,
+    WITHOUT_INDEXING_INDEXED_NAME = 3,
+    WITHOUT_INDEXING_NEW_NAME = 4,
+    NERVER_INDEXED_INDEXED_NAME = 5,
+    NERVER_INDEXED_NEW_NAME = 6,
+    ERROR = 7
 };
 
 std::string IndexTypeToString(IndexType type);
@@ -60,7 +60,7 @@ struct HeaderField {
 };
 
 class HPack {
-public:
+   public:
     typedef std::shared_ptr<HPack> ptr;
     HPack(DynamicTable& table);
 
@@ -70,24 +70,26 @@ public:
     int pack(const std::vector<std::pair<std::string, std::string> >& headers, ByteArray::ptr ba);
     int pack(const std::vector<std::pair<std::string, std::string> >& headers, std::string& out);
 
-    std::vector<HeaderField>& getHeaders() { return m_headers;}
+    std::vector<HeaderField>& getHeaders() {
+        return m_headers;
+    }
     static int Pack(HeaderField* header, ByteArray::ptr ba);
 
     std::string toString() const;
-public:
+
+   public:
     static int WriteVarInt(ByteArray::ptr ba, int32_t prefix, uint64_t value, uint8_t flags);
     static uint64_t ReadVarInt(ByteArray::ptr ba, int32_t prefix);
     static uint64_t ReadVarInt(ByteArray::ptr ba, uint8_t b, int32_t prefix);
     static std::string ReadString(ByteArray::ptr ba);
     static int WriteString(ByteArray::ptr ba, const std::string& str, bool h);
 
-private:
+   private:
     std::vector<HeaderField> m_headers;
     DynamicTable& m_table;
 };
 
-
-}
-}
+}  // namespace http2
+}  // namespace sylar
 
 #endif

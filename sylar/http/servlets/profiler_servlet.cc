@@ -1,16 +1,15 @@
 #include "profiler_servlet.h"
-#include <gperftools/profiler.h>
-#include <gperftools/heap-profiler.h>
 
-#include "sylar/pack/pack.h"
+#include <gperftools/heap-profiler.h>
+#include <gperftools/profiler.h>
+
 #include "sylar/pack/json_encoder.h"
+#include "sylar/pack/pack.h"
 
 namespace sylar {
 namespace http {
 
-ProfilerServlet::ProfilerServlet()
-    :Servlet("ProfilerServlet") {
-}
+ProfilerServlet::ProfilerServlet() : Servlet("ProfilerServlet") {}
 
 struct _ProfilerStatus {
     bool cpu_profiler = false;
@@ -22,7 +21,8 @@ struct _ProfilerStatus {
     std::string cpu_profiler_file;
     std::string mem_profiler_file;
 
-    SYLAR_PACK(O(cpu_profiler, mem_profiler, cpu_start_time, mem_start_time, cpu_profiler_file, mem_profiler_file));
+    SYLAR_PACK(O(cpu_profiler, mem_profiler, cpu_start_time, mem_start_time, cpu_profiler_file,
+                 mem_profiler_file));
 };
 
 struct _RspStruct {
@@ -34,38 +34,38 @@ struct _RspStruct {
 
 static _ProfilerStatus s_status;
 
-int32_t handleStatus(sylar::http::HttpRequest::ptr request
-                     , sylar::http::HttpResponse::ptr response
-                     , sylar::SocketStream::ptr session) {
+int32_t handleStatus(sylar::http::HttpRequest::ptr request, sylar::http::HttpResponse::ptr response,
+                     sylar::SocketStream::ptr session) {
     response->setBody(sylar::pack::EncodeToJsonString(s_status, 0));
     return 0;
 }
 
-int32_t handleStart(sylar::http::HttpRequest::ptr request
-                     , sylar::http::HttpResponse::ptr response
-                     , sylar::SocketStream::ptr session) {
+int32_t handleStart(sylar::http::HttpRequest::ptr request, sylar::http::HttpResponse::ptr response,
+                    sylar::SocketStream::ptr session) {
     auto type = request->getParam("type");
     _RspStruct rsp;
-    if(type == "cpu") {
-        if(s_status.cpu_profiler) {
+    if (type == "cpu") {
+        if (s_status.cpu_profiler) {
             rsp.code = 401;
             rsp.msg = "cpu profiler running";
         } else {
             rsp.msg = "ok";
             s_status.cpu_profiler = true;
             s_status.cpu_start_time = sylar::GetCurrentMS();
-            s_status.cpu_profiler_file = "/tmp/profiler-" + std::to_string(s_status.cpu_start_time) + ".prof";
+            s_status.cpu_profiler_file =
+                "/tmp/profiler-" + std::to_string(s_status.cpu_start_time) + ".prof";
             ProfilerStart(s_status.cpu_profiler_file.c_str());
         }
-    } else if(type == "mem") {
-        if(s_status.mem_profiler) {
+    } else if (type == "mem") {
+        if (s_status.mem_profiler) {
             rsp.code = 401;
             rsp.msg = "mem profiler running";
         } else {
             rsp.msg = "ok";
             s_status.mem_profiler = true;
             s_status.mem_start_time = sylar::GetCurrentMS();
-            s_status.mem_profiler_file = "/tmp/profiler-" + std::to_string(s_status.mem_start_time) + ".heap";
+            s_status.mem_profiler_file =
+                "/tmp/profiler-" + std::to_string(s_status.mem_start_time) + ".heap";
             HeapProfilerStart(s_status.mem_profiler_file.c_str());
         }
     }
@@ -73,13 +73,12 @@ int32_t handleStart(sylar::http::HttpRequest::ptr request
     return 0;
 }
 
-int32_t handleStop(sylar::http::HttpRequest::ptr request
-                     , sylar::http::HttpResponse::ptr response
-                     , sylar::SocketStream::ptr session) {
+int32_t handleStop(sylar::http::HttpRequest::ptr request, sylar::http::HttpResponse::ptr response,
+                   sylar::SocketStream::ptr session) {
     auto type = request->getParam("type");
     _RspStruct rsp;
-    if(type == "cpu") {
-        if(!s_status.cpu_profiler) {
+    if (type == "cpu") {
+        if (!s_status.cpu_profiler) {
             rsp.code = 401;
             rsp.msg = "cpu profiler not running";
         } else {
@@ -89,8 +88,8 @@ int32_t handleStop(sylar::http::HttpRequest::ptr request
             s_status.cpu_profiler_file = "";
             ProfilerStop();
         }
-    } else if(type == "mem") {
-        if(!s_status.mem_profiler) {
+    } else if (type == "mem") {
+        if (!s_status.mem_profiler) {
             rsp.code = 401;
             rsp.msg = "mem profiler not running";
         } else {
@@ -105,15 +104,15 @@ int32_t handleStop(sylar::http::HttpRequest::ptr request
     return 0;
 }
 
-int32_t ProfilerServlet::handle(sylar::http::HttpRequest::ptr request
-                               , sylar::http::HttpResponse::ptr response
-                               , sylar::SocketStream::ptr session) {
+int32_t ProfilerServlet::handle(sylar::http::HttpRequest::ptr request,
+                                sylar::http::HttpResponse::ptr response,
+                                sylar::SocketStream::ptr session) {
     auto path = request->getPath();
-    if(path.find("/status") != std::string::npos) {
+    if (path.find("/status") != std::string::npos) {
         handleStatus(request, response, session);
-    } else if(path.find("/start") != std::string::npos) {
+    } else if (path.find("/start") != std::string::npos) {
         handleStart(request, response, session);
-    } else if(path.find("/stop") != std::string::npos) {
+    } else if (path.find("/stop") != std::string::npos) {
         handleStop(request, response, session);
     } else {
         _RspStruct rsp;
@@ -124,5 +123,5 @@ int32_t ProfilerServlet::handle(sylar::http::HttpRequest::ptr request
     return 0;
 }
 
-}
-}
+}  // namespace http
+}  // namespace sylar

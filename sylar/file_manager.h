@@ -1,10 +1,11 @@
 #ifndef __SYLAR_FILE_MANAGER_H__
 #define __SYLAR_FILE_MANAGER_H__
 
-#include <memory>
-#include <map>
-#include <string>
 #include <functional>
+#include <map>
+#include <memory>
+#include <string>
+
 #include "sylar/mutex.h"
 #include "sylar/singleton.h"
 
@@ -12,20 +13,30 @@ namespace sylar {
 
 class FileInfoManager;
 class FileInfo {
-friend class FileInfoManager;
-public:
+    friend class FileInfoManager;
+
+   public:
     typedef std::shared_ptr<FileInfo> ptr;
     FileInfo();
 
-    const std::string& getPath() const { return m_path;}
-    const std::string& getMd5() const { return m_md5;}
-    const std::string& getData() const { return m_data;}
+    const std::string& getPath() const {
+        return m_path;
+    }
+    const std::string& getMd5() const {
+        return m_md5;
+    }
+    const std::string& getData() const {
+        return m_data;
+    }
 
     void clear();
-    uint64_t getSize() const { return m_size;}
+    uint64_t getSize() const {
+        return m_size;
+    }
 
     std::string toString() const;
-private:
+
+   private:
     std::string m_path;
     std::string m_md5;
     std::string m_data;
@@ -35,7 +46,7 @@ private:
 };
 
 class FileInfoManager {
-public:
+   public:
     typedef std::function<void(FileInfo::ptr info)> callback;
 
     FileInfo::ptr load(const std::string& path, uint64_t limit = -1);
@@ -46,13 +57,14 @@ public:
     void del(const std::string& path);
 
     std::string toString();
-private:
+
+   private:
     sylar::RWMutex m_mutex;
     std::map<std::string, FileInfo::ptr> m_datas;
 };
 
 typedef sylar::Singleton<FileInfoManager> FileInfoMgr;
 
-}
+}  // namespace sylar
 
 #endif

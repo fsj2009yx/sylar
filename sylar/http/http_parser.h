@@ -21,7 +21,7 @@ namespace http {
  * @brief HTTP请求解析类
  */
 class HttpRequestParser {
-public:
+   public:
     /// HTTP解析类的智能指针
     typedef std::shared_ptr<HttpRequestParser> ptr;
 
@@ -48,18 +48,22 @@ public:
      * @brief 是否有错误
      * @return 是否有错误
      */
-    int hasError(); 
+    int hasError();
 
     /**
      * @brief 返回HttpRequest结构体
      */
-    HttpRequest::ptr getData() const { return m_data;}
+    HttpRequest::ptr getData() const {
+        return m_data;
+    }
 
     /**
      * @brief 设置错误
      * @param[in] v 错误值
      */
-    void setError(int v) { m_error = v;}
+    void setError(int v) {
+        m_error = v;
+    }
 
     /**
      * @brief 获取消息体长度
@@ -69,8 +73,11 @@ public:
     /**
      * @brief 获取http_parser结构体
      */
-    const http_parser& getParser() const { return m_parser;}
-public:
+    const http_parser& getParser() const {
+        return m_parser;
+    }
+
+   public:
     /**
      * @brief 返回HttpRequest协议解析的缓存大小
      */
@@ -80,7 +87,8 @@ public:
      * @brief 返回HttpRequest协议的最大消息体大小
      */
     static uint64_t GetHttpRequestMaxBodySize();
-private:
+
+   private:
     /// http_parser
     http_parser m_parser;
     /// HttpRequest结构
@@ -96,7 +104,7 @@ private:
  * @brief Http响应解析结构体
  */
 class HttpResponseParser {
-public:
+   public:
     /// 智能指针类型
     typedef std::shared_ptr<HttpResponseParser> ptr;
 
@@ -122,18 +130,22 @@ public:
     /**
      * @brief 是否有错误
      */
-    int hasError(); 
+    int hasError();
 
     /**
      * @brief 返回HttpResponse
      */
-    HttpResponse::ptr getData() const { return m_data;}
+    HttpResponse::ptr getData() const {
+        return m_data;
+    }
 
     /**
      * @brief 设置错误码
      * @param[in] v 错误码
      */
-    void setError(int v) { m_error = v;}
+    void setError(int v) {
+        m_error = v;
+    }
 
     /**
      * @brief 获取消息体长度
@@ -143,8 +155,11 @@ public:
     /**
      * @brief 返回httpclient_parser
      */
-    const httpclient_parser& getParser() const { return m_parser;}
-public:
+    const httpclient_parser& getParser() const {
+        return m_parser;
+    }
+
+   public:
     /**
      * @brief 返回HTTP响应解析缓存大小
      */
@@ -154,7 +169,8 @@ public:
      * @brief 返回HTTP响应最大消息体大小
      */
     static uint64_t GetHttpResponseMaxBodySize();
-private:
+
+   private:
     /// httpclient_parser
     httpclient_parser m_parser;
     /// HttpResponse
@@ -165,7 +181,7 @@ private:
     int m_error;
 };
 
-}
-}
+}  // namespace http
+}  // namespace sylar
 
 #endif

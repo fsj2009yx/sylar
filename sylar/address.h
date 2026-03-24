@@ -9,16 +9,17 @@
 #ifndef __SYLAR_ADDRESS_H__
 #define __SYLAR_ADDRESS_H__
 
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/un.h>
+#include <unistd.h>
+
+#include <iostream>
+#include <map>
 #include <memory>
 #include <string>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <iostream>
 #include <vector>
-#include <map>
 
 namespace sylar {
 
@@ -28,7 +29,7 @@ class IPAddress;
  * @brief 网络地址的基类,抽象类
  */
 class Address {
-public:
+   public:
     typedef std::shared_ptr<Address> ptr;
 
     /**
@@ -49,7 +50,7 @@ public:
      * @return 返回是否转换成功
      */
     static bool Lookup(std::vector<Address::ptr>& result, const std::string& host,
-            int family = AF_INET, int type = 0, int protocol = 0);
+                       int family = AF_INET, int type = 0, int protocol = 0);
     /**
      * @brief 通过host地址返回对应条件的任意Address
      * @param[in] host 域名,服务器名等.举例: www.sylar.top[:80] (方括号为可选内容)
@@ -58,8 +59,8 @@ public:
      * @param[in] protocol 协议,IPPROTO_TCP、IPPROTO_UDP 等
      * @return 返回满足条件的任意Address,失败返回nullptr
      */
-    static Address::ptr LookupAny(const std::string& host,
-            int family = AF_INET, int type = 0, int protocol = 0);
+    static Address::ptr LookupAny(const std::string& host, int family = AF_INET, int type = 0,
+                                  int protocol = 0);
     /**
      * @brief 通过host地址返回对应条件的任意IPAddress
      * @param[in] host 域名,服务器名等.举例: www.sylar.top[:80] (方括号为可选内容)
@@ -69,7 +70,8 @@ public:
      * @return 返回满足条件的任意IPAddress,失败返回nullptr
      */
     static std::shared_ptr<IPAddress> LookupAnyIPAddress(const std::string& host,
-            int family = AF_INET, int type = 0, int protocol = 0);
+                                                         int family = AF_INET, int type = 0,
+                                                         int protocol = 0);
 
     /**
      * @brief 返回本机所有网卡的<网卡名, 地址, 子网掩码位数>
@@ -77,9 +79,9 @@ public:
      * @param[in] family 协议族(AF_INT, AF_INT6, AF_UNIX)
      * @return 是否获取成功
      */
-    static bool GetInterfaceAddresses(std::multimap<std::string
-                    ,std::pair<Address::ptr, uint32_t> >& result,
-                    int family = AF_INET);
+    static bool GetInterfaceAddresses(
+        std::multimap<std::string, std::pair<Address::ptr, uint32_t> >& result,
+        int family = AF_INET);
     /**
      * @brief 获取指定网卡的地址和子网掩码位数
      * @param[out] result 保存指定网卡所有地址
@@ -87,8 +89,8 @@ public:
      * @param[in] family 协议族(AF_INT, AF_INT6, AF_UNIX)
      * @return 是否获取成功
      */
-    static bool GetInterfaceAddresses(std::vector<std::pair<Address::ptr, uint32_t> >&result
-                    ,const std::string& iface, int family = AF_INET);
+    static bool GetInterfaceAddresses(std::vector<std::pair<Address::ptr, uint32_t> >& result,
+                                      const std::string& iface, int family = AF_INET);
 
     /**
      * @brief 虚析构函数
@@ -145,7 +147,7 @@ public:
  * @brief IP地址的基类
  */
 class IPAddress : public Address {
-public:
+   public:
     typedef std::shared_ptr<IPAddress> ptr;
 
     /**
@@ -192,7 +194,7 @@ public:
  * @brief IPv4地址
  */
 class IPv4Address : public IPAddress {
-public:
+   public:
     typedef std::shared_ptr<IPv4Address> ptr;
 
     /**
@@ -226,7 +228,8 @@ public:
     IPAddress::ptr subnetMask(uint32_t prefix_len) override;
     uint32_t getPort() const override;
     void setPort(uint16_t v) override;
-private:
+
+   private:
     sockaddr_in m_addr;
 };
 
@@ -234,7 +237,7 @@ private:
  * @brief IPv6地址
  */
 class IPv6Address : public IPAddress {
-public:
+   public:
     typedef std::shared_ptr<IPv6Address> ptr;
     /**
      * @brief 通过IPv6地址字符串构造IPv6Address
@@ -270,7 +273,8 @@ public:
     IPAddress::ptr subnetMask(uint32_t prefix_len) override;
     uint32_t getPort() const override;
     void setPort(uint16_t v) override;
-private:
+
+   private:
     sockaddr_in6 m_addr;
 };
 
@@ -278,7 +282,7 @@ private:
  * @brief UnixSocket地址
  */
 class UnixAddress : public Address {
-public:
+   public:
     typedef std::shared_ptr<UnixAddress> ptr;
 
     /**
@@ -298,7 +302,8 @@ public:
     void setAddrLen(uint32_t v);
     std::string getPath() const;
     std::ostream& insert(std::ostream& os) const override;
-private:
+
+   private:
     sockaddr_un m_addr;
     socklen_t m_length;
 };
@@ -307,7 +312,7 @@ private:
  * @brief 未知地址
  */
 class UnknownAddress : public Address {
-public:
+   public:
     typedef std::shared_ptr<UnknownAddress> ptr;
     UnknownAddress(int family);
     UnknownAddress(const sockaddr& addr);
@@ -315,7 +320,8 @@ public:
     sockaddr* getAddr() override;
     socklen_t getAddrLen() const override;
     std::ostream& insert(std::ostream& os) const override;
-private:
+
+   private:
     sockaddr m_addr;
 };
 
@@ -324,6 +330,6 @@ private:
  */
 std::ostream& operator<<(std::ostream& os, const Address& addr);
 
-}
+}  // namespace sylar
 
 #endif

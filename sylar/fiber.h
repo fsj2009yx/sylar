@@ -9,16 +9,16 @@
 #ifndef __SYLAR_FIBER_H__
 #define __SYLAR_FIBER_H__
 
-#include <memory>
 #include <functional>
+#include <memory>
 
-#define FIBER_UCONTEXT      1
-#define FIBER_FCONTEXT      2
-#define FIBER_LIBCO         3 
-#define FIBER_LIBACO        4
+#define FIBER_UCONTEXT 1
+#define FIBER_FCONTEXT 2
+#define FIBER_LIBCO 3
+#define FIBER_LIBACO 4
 
 #ifndef FIBER_CONTEXT_TYPE
-#define FIBER_CONTEXT_TYPE  FIBER_FCONTEXT
+#define FIBER_CONTEXT_TYPE FIBER_FCONTEXT
 #endif
 
 #if FIBER_CONTEXT_TYPE == FIBER_UCONTEXT
@@ -44,11 +44,12 @@ void FreeFiber(Fiber* ptr);
  * @brief 协程类
  */
 class Fiber : public std::enable_shared_from_this<Fiber> {
-friend class Scheduler;
-friend Fiber* NewFiber();
-friend Fiber* NewFiber(std::function<void()> cb, size_t stacksize, bool use_caller);
-friend void FreeFiber(Fiber* ptr);
-public:
+    friend class Scheduler;
+    friend Fiber* NewFiber();
+    friend Fiber* NewFiber(std::function<void()> cb, size_t stacksize, bool use_caller);
+    friend void FreeFiber(Fiber* ptr);
+
+   public:
     typedef std::shared_ptr<Fiber> ptr;
 
     /**
@@ -68,7 +69,8 @@ public:
         /// 异常状态
         EXCEPT
     };
-private:
+
+   private:
     /**
      * @brief 无参构造函数
      * @attention 每个线程第一个协程的构造
@@ -82,8 +84,8 @@ private:
      * @param[in] use_caller 是否在MainFiber上调度
      */
     Fiber(std::function<void()> cb, size_t stacksize = 0, bool use_caller = false);
-public:
 
+   public:
     /**
      * @brief 析构函数
      */
@@ -124,14 +126,18 @@ public:
     /**
      * @brief 返回协程id
      */
-    uint64_t getId() const { return m_id;}
+    uint64_t getId() const {
+        return m_id;
+    }
 
     /**
      * @brief 返回协程状态
      */
-    State getState() const { return m_state;}
-public:
+    State getState() const {
+        return m_state;
+    }
 
+   public:
     /**
      * @brief 设置当前线程的运行协程
      * @param[in] f 运行协程
@@ -188,7 +194,8 @@ public:
      * @brief 获取当前协程的id
      */
     static uint64_t GetFiberId();
-private:
+
+   private:
     /// 协程id
     uint64_t m_id = 0;
     /// 协程运行栈大小
@@ -212,6 +219,6 @@ private:
     char m_stack[];
 };
 
-}
+}  // namespace sylar
 
 #endif

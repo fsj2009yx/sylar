@@ -1,4 +1,5 @@
 #include "ns_client.h"
+
 #include "sylar/log.h"
 #include "sylar/util.h"
 
@@ -47,16 +48,16 @@ void NSClient::delQueryDomain(const std::string& domain) {
 }
 
 RockResult::ptr NSClient::query() {
-    sylar::RockRequest::ptr req = std::make_shared<sylar::RockRequest>(); 
+    sylar::RockRequest::ptr req = std::make_shared<sylar::RockRequest>();
     req->setSn(sylar::Atomic::addFetch(m_sn, 1));
     req->setCmd((int)NSCommand::QUERY);
     auto data = std::make_shared<sylar::ns::QueryRequest>();
 
     sylar::RWMutex::ReadLock lock(m_mutex);
-    for(auto& i : m_queryDomains) {
+    for (auto& i : m_queryDomains) {
         data->add_domains(i);
     }
-    if(m_queryDomains.empty()) {
+    if (m_queryDomains.empty()) {
         return std::make_shared<RockResult>(0, "ok", 0, nullptr, nullptr);
     }
     lock.unlock();
@@ -64,41 +65,40 @@ RockResult::ptr NSClient::query() {
     req->setAsPB(*data);
     auto rt = request(req, 1000);
     do {
-        if(!rt->response) {
+        if (!rt->response) {
             SYLAR_LOG_ERROR(g_logger) << "query error result=" << rt->result;
             break;
         }
         auto rsp = rt->response->getAsPB<sylar::ns::QueryResponse>();
-        if(!rsp) {
+        if (!rsp) {
             SYLAR_LOG_ERROR(g_logger) << "invalid data not QueryResponse";
             break;
         }
 
         NSDomainSet::ptr domains = std::make_shared<NSDomainSet>();
-        for(auto& i : rsp->infos()) {
-            if(!hasQueryDomain(i.domain())) {
+        for (auto& i : rsp->infos()) {
+            if (!hasQueryDomain(i.domain())) {
                 continue;
             }
             auto domain = domains->get(i.domain(), true);
             uint32_t cmd = i.cmd();
 
-            for(auto& n : i.nodes()) {
+            for (auto& n : i.nodes()) {
                 NSNode::ptr node = std::make_shared<NSNode>(n.ip(), n.port(), n.weight());
-                if(!(node->getId() >> 32)) {
-                    SYLAR_LOG_ERROR(g_logger) << "invalid node: "
-                        << node->toString();
+                if (!(node->getId() >> 32)) {
+                    SYLAR_LOG_ERROR(g_logger) << "invalid node: " << node->toString();
                     continue;
                 }
                 domain->add(cmd, node);
             }
         }
         m_domains->swap(*domains);
-    } while(false);
+    } while (false);
     return rt;
 }
 
 void NSClient::onQueryDomainChange() {
-    if(isConnected()) {
+    if (isConnected()) {
         query();
     }
 }
@@ -107,8 +107,8 @@ void NSClient::init() {
     auto self = std::dynamic_pointer_cast<NSClient>(shared_from_this());
     setConnectCb(std::bind(&NSClient::onConnect, self, std::placeholders::_1));
     setDisconnectCb(std::bind(&NSClient::onDisconnect, self, std::placeholders::_1));
-    setNotifyHandler(std::bind(&NSClient::onNotify, self
-                        ,std::placeholders::_1, std::placeholders::_2));
+    setNotifyHandler(
+        std::bind(&NSClient::onNotify, self, std::placeholders::_1, std::placeholders::_2));
 }
 
 void NSClient::uninit() {
@@ -116,13 +116,13 @@ void NSClient::uninit() {
     setDisconnectCb(nullptr);
     setNotifyHandler(nullptr);
 
-    if(m_timer) {
+    if (m_timer) {
         m_timer->cancel();
     }
 }
 
 bool NSClient::onConnect(sylar::AsyncSocketStream::ptr stream) {
-    if(m_timer) {
+    if (m_timer) {
         m_timer->cancel();
     }
     auto self = std::dynamic_pointer_cast<NSClient>(shared_from_this());
@@ -132,53 +132,52 @@ bool NSClient::onConnect(sylar::AsyncSocketStream::ptr stream) {
 }
 
 void NSClient::onTimer() {
-    sylar::RockRequest::ptr req = std::make_shared<sylar::RockRequest>(); 
+    sylar::RockRequest::ptr req = std::make_shared<sylar::RockRequest>();
     req->setSn(sylar::Atomic::addFetch(m_sn, 1));
     req->setCmd((uint32_t)NSCommand::TICK);
     auto rt = request(req, 1000);
-    if(!rt->response) {
+    if (!rt->response) {
         SYLAR_LOG_ERROR(g_logger) << "tick error result=" << rt->result;
     }
     sleep(1000);
     query();
 }
 
-void NSClient::onDisconnect(sylar::AsyncSocketStream::ptr stream) {
-}
+void NSClient::onDisconnect(sylar::AsyncSocketStream::ptr stream) {}
 
-bool NSClient::onNotify(sylar::RockNotify::ptr nty,sylar::RockStream::ptr stream) {
+bool NSClient::onNotify(sylar::RockNotify::ptr nty, sylar::RockStream::ptr stream) {
     do {
-        if(nty->getNotify() == (uint32_t)NSNotify::NODE_CHANGE) {
+        if (nty->getNotify() == (uint32_t)NSNotify::NODE_CHANGE) {
             auto nm = nty->getAsPB<sylar::ns::NotifyMessage>();
-            if(!nm) {
+            if (!nm) {
                 SYLAR_LOG_ERROR(g_logger) << "invalid node_change data";
                 break;
             }
 
-            for(auto& i : nm->dels()) {
-                if(!hasQueryDomain(i.domain())) {
+            for (auto& i : nm->dels()) {
+                if (!hasQueryDomain(i.domain())) {
                     continue;
                 }
                 auto domain = m_domains->get(i.domain());
-                if(!domain) {
+                if (!domain) {
                     continue;
                 }
                 int cmd = i.cmd();
-                for(auto& n : i.nodes()) {
+                for (auto& n : i.nodes()) {
                     NSNode::ptr node = std::make_shared<NSNode>(n.ip(), n.port(), n.weight());
                     domain->del(cmd, node->getId());
                 }
             }
 
-            for(auto& i : nm->updates()) {
-                if(!hasQueryDomain(i.domain())) {
+            for (auto& i : nm->updates()) {
+                if (!hasQueryDomain(i.domain())) {
                     continue;
                 }
                 auto domain = m_domains->get(i.domain(), true);
                 int cmd = i.cmd();
-                for(auto& n : i.nodes()) {
+                for (auto& n : i.nodes()) {
                     NSNode::ptr node = std::make_shared<NSNode>(n.ip(), n.port(), n.weight());
-                    if(node->getId() >> 32) {
+                    if (node->getId() >> 32) {
                         domain->add(cmd, node);
                     } else {
                         SYLAR_LOG_ERROR(g_logger) << "invalid node: " << node->toString();
@@ -186,9 +185,9 @@ bool NSClient::onNotify(sylar::RockNotify::ptr nty,sylar::RockStream::ptr stream
                 }
             }
         }
-    } while(false);
+    } while (false);
     return true;
 }
 
-}
-}
+}  // namespace ns
+}  // namespace sylar

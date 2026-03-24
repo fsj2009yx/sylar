@@ -1,30 +1,31 @@
 #ifndef __SYLAR_HTTP_SESSION_DATA_H__
 #define __SYLAR_HTTP_SESSION_DATA_H__
 
-#include "sylar/mutex.h"
-#include "sylar/singleton.h"
 #include <boost/any.hpp>
 #include <unordered_map>
+
+#include "sylar/mutex.h"
+#include "sylar/singleton.h"
 
 namespace sylar {
 namespace http {
 
 class SessionData {
-public:
+   public:
     typedef std::shared_ptr<SessionData> ptr;
     SessionData(bool auto_gen = false);
 
-    template<class T>
+    template <class T>
     void setData(const std::string& key, const T& v) {
         sylar::RWMutex::WriteLock lock(m_mutex);
         m_datas[key] = v;
     }
 
-    template<class T>
+    template <class T>
     T getData(const std::string& key, const T& def = T()) {
         sylar::RWMutex::ReadLock lock(m_mutex);
         auto it = m_datas.find(key);
-        if(it == m_datas.end()) {
+        if (it == m_datas.end()) {
             return def;
         }
         boost::any v = it->second;
@@ -39,12 +40,21 @@ public:
     void del(const std::string& key);
 
     bool has(const std::string& key);
-    uint64_t getLastAccessTime() const { return m_lastAccessTime;}
-    void setLastAccessTime(uint64_t v) { m_lastAccessTime = v;}
+    uint64_t getLastAccessTime() const {
+        return m_lastAccessTime;
+    }
+    void setLastAccessTime(uint64_t v) {
+        m_lastAccessTime = v;
+    }
 
-    const std::string& getId() const { return m_id;}
-    void setId(const std::string& val) { m_id = val;}
-private:
+    const std::string& getId() const {
+        return m_id;
+    }
+    void setId(const std::string& val) {
+        m_id = val;
+    }
+
+   private:
     sylar::RWMutex m_mutex;
     std::unordered_map<std::string, boost::any> m_datas;
     uint64_t m_lastAccessTime;
@@ -52,19 +62,20 @@ private:
 };
 
 class SessionDataManager {
-public:
+   public:
     void add(SessionData::ptr info);
     void del(const std::string& id);
     SessionData::ptr get(const std::string& id);
     void check(int64_t ts = 3600);
-private:
+
+   private:
     sylar::RWMutex m_mutex;
     std::unordered_map<std::string, SessionData::ptr> m_datas;
 };
 
 typedef sylar::Singleton<SessionDataManager> SessionDataMgr;
 
-}
-}
+}  // namespace http
+}  // namespace sylar
 
 #endif

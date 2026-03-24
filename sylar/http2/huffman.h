@@ -7,7 +7,7 @@ namespace sylar {
 namespace http2 {
 
 class Huffman {
-public:
+   public:
     static int EncodeString(const char* in, int in_len, std::string& out, int prefix);
     static int EncodeString(const std::string& in, std::string& out, int prefix);
     static int DecodeString(const char* in, int in_len, std::string& out);
@@ -19,9 +19,9 @@ public:
     static bool ShouldEncode(const char* in, int in_len);
 };
 
-//void testHuffman();
+// void testHuffman();
 
-}
-}
+}  // namespace http2
+}  // namespace sylar
 
 #endif

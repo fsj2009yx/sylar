@@ -2,14 +2,16 @@
 #define __SYLAR_DB_REDIS_H__
 
 #include <stdlib.h>
-//#include <hiredis_cluster/hiredis.h>
-#include <hiredis_cluster/hircluster.h>
+// #include <hiredis_cluster/hiredis.h>
 #include <hiredis_cluster/adapters/libevent.h>
+#include <hiredis_cluster/hircluster.h>
 #include <sys/time.h>
-#include <string>
+
 #include <memory>
-#include "sylar/mutex.h"
+#include <string>
+
 #include "sylar/db/fox_thread.h"
+#include "sylar/mutex.h"
 #include "sylar/singleton.h"
 
 namespace sylar {
@@ -17,29 +19,35 @@ namespace sylar {
 typedef std::shared_ptr<redisReply> ReplyPtr;
 
 class IRedis {
-public:
-    enum Type {
-        REDIS = 1,
-        REDIS_CLUSTER = 2,
-        FOX_REDIS = 3,
-        FOX_REDIS_CLUSTER = 4
-    };
+   public:
+    enum Type { REDIS = 1, REDIS_CLUSTER = 2, FOX_REDIS = 3, FOX_REDIS_CLUSTER = 4 };
     typedef std::shared_ptr<IRedis> ptr;
-    IRedis() : m_logEnable(true) { }
+    IRedis() : m_logEnable(true) {}
     virtual ~IRedis() {}
 
     virtual ReplyPtr cmd(const char* fmt, ...) = 0;
     virtual ReplyPtr cmd(const char* fmt, va_list ap) = 0;
     virtual ReplyPtr cmd(const std::vector<std::string>& argv) = 0;
 
-    const std::string& getName() const { return m_name;}
-    void setName(const std::string& v) { m_name = v;}
+    const std::string& getName() const {
+        return m_name;
+    }
+    void setName(const std::string& v) {
+        m_name = v;
+    }
 
-    const std::string& getPasswd() const { return m_passwd;}
-    void setPasswd(const std::string& v) { m_passwd = v;}
+    const std::string& getPasswd() const {
+        return m_passwd;
+    }
+    void setPasswd(const std::string& v) {
+        m_passwd = v;
+    }
 
-    Type getType() const { return m_type;}
-protected:
+    Type getType() const {
+        return m_type;
+    }
+
+   protected:
     std::string m_name;
     std::string m_passwd;
     Type m_type;
@@ -47,7 +55,7 @@ protected:
 };
 
 class ISyncRedis : public IRedis {
-public:
+   public:
     typedef std::shared_ptr<ISyncRedis> ptr;
     virtual ~ISyncRedis() {}
 
@@ -62,15 +70,19 @@ public:
 
     virtual ReplyPtr getReply() = 0;
 
-    uint64_t getLastActiveTime() const { return m_lastActiveTime;}
-    void setLastActiveTime(uint64_t v) { m_lastActiveTime = v;}
+    uint64_t getLastActiveTime() const {
+        return m_lastActiveTime;
+    }
+    void setLastActiveTime(uint64_t v) {
+        m_lastActiveTime = v;
+    }
 
-protected:
+   protected:
     uint64_t m_lastActiveTime;
 };
 
 class Redis : public ISyncRedis {
-public:
+   public:
     typedef std::shared_ptr<Redis> ptr;
     Redis();
     Redis(const std::map<std::string, std::string>& conf);
@@ -89,7 +101,8 @@ public:
     virtual int appendCmd(const std::vector<std::string>& argv);
 
     virtual ReplyPtr getReply();
-private:
+
+   private:
     std::string m_host;
     uint32_t m_port;
     uint32_t m_connectMs;
@@ -98,7 +111,7 @@ private:
 };
 
 class RedisCluster : public ISyncRedis {
-public:
+   public:
     typedef std::shared_ptr<RedisCluster> ptr;
     RedisCluster();
     RedisCluster(const std::map<std::string, std::string>& conf);
@@ -117,7 +130,8 @@ public:
     virtual int appendCmd(const std::vector<std::string>& argv);
 
     virtual ReplyPtr getReply();
-private:
+
+   private:
     std::string m_host;
     uint32_t m_port;
     uint32_t m_connectMs;
@@ -126,13 +140,9 @@ private:
 };
 
 class FoxRedis : public IRedis {
-public:
+   public:
     typedef std::shared_ptr<FoxRedis> ptr;
-    enum STATUS {
-        UNCONNECTED = 0,
-        CONNECTING = 1,
-        CONNECTED = 2
-    };
+    enum STATUS { UNCONNECTED = 0, CONNECTING = 1, CONNECTED = 2 };
     enum RESULT {
         OK = 0,
         TIME_OUT = 1,
@@ -151,10 +161,14 @@ public:
     virtual ReplyPtr cmd(const std::vector<std::string>& argv);
 
     bool init();
-    int getCtxCount() const { return m_ctxCount;}
-private:
+    int getCtxCount() const {
+        return m_ctxCount;
+    }
+
+   private:
     static void OnAuthCb(redisAsyncContext* c, void* rp, void* priv);
-private:
+
+   private:
     struct FCtx {
         std::string cmd;
         sylar::Scheduler* scheduler;
@@ -170,13 +184,13 @@ private:
         FoxRedis* rds;
         std::string cmd;
         FCtx* fctx;
-        //std::vector<std::string> parts;
-        //sylar::Scheduler* scheduler;
-        //sylar::Fiber::ptr fiber;
-        //ReplyPtr rpy;
+        // std::vector<std::string> parts;
+        // sylar::Scheduler* scheduler;
+        // sylar::Fiber::ptr fiber;
+        // ReplyPtr rpy;
         FoxThread* thread;
 
-        //Ctx::ptr ref;
+        // Ctx::ptr ref;
 
         Ctx(FoxRedis* rds);
         ~Ctx();
@@ -184,16 +198,19 @@ private:
         void cancelEvent();
         static void EventCb(int fd, short event, void* d);
     };
-private:
+
+   private:
     virtual void pcmd(FCtx* ctx);
     bool pinit();
     void delayDelete(redisAsyncContext* c);
-private:
+
+   private:
     static void ConnectCb(const redisAsyncContext* c, int status);
     static void DisconnectCb(const redisAsyncContext* c, int status);
-    static void CmdCb(redisAsyncContext *c, void *r, void *privdata);
+    static void CmdCb(redisAsyncContext* c, void* r, void* privdata);
     static void TimeCb(int fd, short event, void* d);
-private:
+
+   private:
     sylar::FoxThread* m_thread;
     std::shared_ptr<redisAsyncContext> m_context;
     std::string m_host;
@@ -207,13 +224,9 @@ private:
 };
 
 class FoxRedisCluster : public IRedis {
-public:
+   public:
     typedef std::shared_ptr<FoxRedisCluster> ptr;
-    enum STATUS {
-        UNCONNECTED = 0,
-        CONNECTING = 1,
-        CONNECTED = 2
-    };
+    enum STATUS { UNCONNECTED = 0, CONNECTING = 1, CONNECTED = 2 };
     enum RESULT {
         OK = 0,
         TIME_OUT = 1,
@@ -231,10 +244,13 @@ public:
     virtual ReplyPtr cmd(const char* fmt, va_list ap);
     virtual ReplyPtr cmd(const std::vector<std::string>& argv);
 
-    int getCtxCount() const { return m_ctxCount;}
+    int getCtxCount() const {
+        return m_ctxCount;
+    }
 
     bool init();
-private:
+
+   private:
     struct FCtx {
         std::string cmd;
         sylar::Scheduler* scheduler;
@@ -249,15 +265,15 @@ private:
         FoxRedisCluster* rds;
         FCtx* fctx;
         std::string cmd;
-        //std::vector<std::string> parts;
+        // std::vector<std::string> parts;
         FoxThread* thread;
-        //int cancel_count;
-        //int destory;
-        //int callback_count;
-        //sylar::RWMutex mutex;
+        // int cancel_count;
+        // int destory;
+        // int callback_count;
+        // sylar::RWMutex mutex;
 
-        //Ctx::ptr ref;
-        //Ctx::ptr tref;
+        // Ctx::ptr ref;
+        // Ctx::ptr tref;
         void cancelEvent();
 
         Ctx(FoxRedisCluster* rds);
@@ -265,17 +281,20 @@ private:
         bool init();
         static void EventCb(int fd, short event, void* d);
     };
-private:
+
+   private:
     virtual void pcmd(FCtx* ctx);
     bool pinit();
     void delayDelete(redisAsyncContext* c);
     static void OnAuthCb(redisClusterAsyncContext* c, void* rp, void* priv);
-private:
+
+   private:
     static void ConnectCb(const redisAsyncContext* c, int status);
     static void DisconnectCb(const redisAsyncContext* c, int status);
-    static void CmdCb(redisClusterAsyncContext*c, void *r, void *privdata);
+    static void CmdCb(redisClusterAsyncContext* c, void* r, void* privdata);
     static void TimeCb(int fd, short event, void* d);
-private:
+
+   private:
     sylar::FoxThread* m_thread;
     std::shared_ptr<redisClusterAsyncContext> m_context;
     std::string m_host;
@@ -288,15 +307,17 @@ private:
 };
 
 class RedisManager {
-public:
+   public:
     RedisManager();
     IRedis::ptr get(const std::string& name);
 
     std::ostream& dump(std::ostream& os);
-private:
+
+   private:
     void freeRedis(IRedis* r);
     void init();
-private:
+
+   private:
     sylar::RWMutex m_mutex;
     std::map<std::string, std::list<IRedis*> > m_datas;
     std::map<std::string, std::map<std::string, std::string> > m_config;
@@ -305,15 +326,16 @@ private:
 typedef sylar::Singleton<RedisManager> RedisMgr;
 
 class RedisUtil {
-public:
+   public:
     static ReplyPtr Cmd(const std::string& name, const char* fmt, ...);
-    static ReplyPtr Cmd(const std::string& name, const char* fmt, va_list ap); 
-    static ReplyPtr Cmd(const std::string& name, const std::vector<std::string>& args); 
+    static ReplyPtr Cmd(const std::string& name, const char* fmt, va_list ap);
+    static ReplyPtr Cmd(const std::string& name, const std::vector<std::string>& args);
 
     static ReplyPtr TryCmd(const std::string& name, uint32_t count, const char* fmt, ...);
-    static ReplyPtr TryCmd(const std::string& name, uint32_t count, const std::vector<std::string>& args); 
+    static ReplyPtr TryCmd(const std::string& name, uint32_t count,
+                           const std::vector<std::string>& args);
 };
 
-}
+}  // namespace sylar
 
 #endif
