@@ -156,11 +156,15 @@ Fiber::Fiber(std::function<void()> cb, size_t stacksize, bool use_caller)
 
     // m_stack = StackAllocator::Alloc(m_stacksize);
 #if FIBER_CONTEXT_TYPE == FIBER_UCONTEXT
+    // 首先，getcontext即获取当前CPU上所有寄存器快照，存入 m_ctx
+    // m_ctx.uc_mcontext 里的 RSP 还是指向当前的系统栈
     if (getcontext(&m_ctx)) {
         SYLAR_ASSERT2(false, "getcontext");
     }
     m_ctx.uc_link = nullptr;
+    // 这一行开始，指代劫持的目标栈内存块地址
     m_ctx.uc_stack.ss_sp = m_stack;
+    // 指定栈大小
     m_ctx.uc_stack.ss_size = m_stacksize;
 
     if (!use_caller) {
@@ -337,6 +341,8 @@ void Fiber::YieldToHold() {
 uint64_t Fiber::TotalFibers() {
     return s_fiber_count;
 }
+
+// MainFunc为std:function cb的执行包装器
 #if FIBER_CONTEXT_TYPE == FIBER_UCONTEXT || FIBER_CONTEXT_TYPE == FIBER_LIBACO
 void Fiber::MainFunc() {
 #elif FIBER_CONTEXT_TYPE == FIBER_FCONTEXT
@@ -344,9 +350,11 @@ void Fiber::MainFunc(intptr_t vp) {
 #elif FIBER_CONTEXT_TYPE == FIBER_LIBCO
 void* Fiber::MainFunc(void*, void*) {
 #endif
+    // 静态方法，首先要拿到当前线程正在跑的那个对象实例
     Fiber::ptr cur = GetThis();
     SYLAR_ASSERT(cur);
     try {
+        // 执行m_cb函数
         cur->m_cb();
         cur->m_cb = nullptr;
         cur->m_state = TERM;
@@ -362,6 +370,14 @@ void* Fiber::MainFunc(void*, void*) {
                                   << sylar::BacktraceToString();
     }
 
+    // 先拿原始指针reset清空再swapout的原因:
+    // 如果直接cur.swapout，CPU 执行 swapOut：寄存器环境（RSP, RIP）瞬间从当前协程栈切换到了调度器栈
+    // 局部变量cur（智能指针）还存在于协程栈的内存里，它的析构函数（Destructor）没有被调用，造成内存泄露
+    // 虽然get拿到原始指针reset，会担心造成指针悬空，因为此时引用计数已经归0，会触发析构
+    // 或者说逻辑上的“自毁”：虽然对象在逻辑上已经可以销毁了，但因为当前 CPU
+    // 还在跑这个对象的静态函数（MainFunc），
+    // 且我们只用了寄存器里的 raw_ptr 地址，所以程序能撑住最后一口气
+    // 这里使用的是寄存器地址而不是已经销毁的内存地址，所以不会造成UB
     auto raw_ptr = cur.get();
     cur.reset();
     raw_ptr->swapOut();

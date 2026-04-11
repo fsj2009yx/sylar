@@ -5,6 +5,8 @@
 
 namespace sylar {
 
+// thread_local表示，每个线程都有独立的变量样本
+// 做到全局可访问+线程间不可共享
 static thread_local Thread* t_thread = nullptr;
 static thread_local std::string t_thread_name = "UNKNOW";
 
@@ -66,6 +68,12 @@ void* Thread::run(void* arg) {
     pthread_setname_np(pthread_self(), thread->m_name.substr(0, 15).c_str());
 
     std::function<void()> cb;
+    /*
+     * thread->m_cb 是成员变量。
+     * 如果 cb() 运行时间很长，而外部因为某种原因销毁了 Thread 对象，直接访问成员变量可能会导致崩溃
+     * std::function 可能捕获了大量的闭包变量（智能指针等）。执行 swap 后，thread->m_cb 变为空
+     *当线程执行完毕时，局部变量 cb 自动析构，它所持有的资源会立即释放，而不需要等到 Thread 对象析构
+     */
     cb.swap(thread->m_cb);
 
     thread->m_semaphore.notify();

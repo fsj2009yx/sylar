@@ -92,11 +92,14 @@ void LogAppender::setFormatter(LogFormatter::ptr val) {
     }
 }
 
+// LogFormatter是共享资源，
+// 如果LogAppender没有自己的LogFormatter，就使用Logger的LogFormatter
 LogFormatter::ptr LogAppender::getFormatter() {
     MutexType::Lock lock(m_mutex);
-    return m_formatter;
+    return m_formatter;  // 返回智能指针（共享所有权）
 }
 
+// MessageFormatItem用于输出日志内容
 class MessageFormatItem : public LogFormatter::FormatItem {
    public:
     MessageFormatItem(const std::string& str = "") {}
@@ -107,6 +110,7 @@ class MessageFormatItem : public LogFormatter::FormatItem {
     }
 };
 
+// LevelFormatItem用于输出日志级别
 class LevelFormatItem : public LogFormatter::FormatItem {
    public:
     LevelFormatItem(const std::string& str = "") {}
@@ -117,6 +121,7 @@ class LevelFormatItem : public LogFormatter::FormatItem {
     }
 };
 
+// ElapseFormatItem用于输出日志事件发生到现在的时间间隔（单位：毫秒）
 class ElapseFormatItem : public LogFormatter::FormatItem {
    public:
     ElapseFormatItem(const std::string& str = "") {}
@@ -127,6 +132,7 @@ class ElapseFormatItem : public LogFormatter::FormatItem {
     }
 };
 
+// NameFormatItem用于输出日志名称
 class NameFormatItem : public LogFormatter::FormatItem {
    public:
     NameFormatItem(const std::string& str = "") {}
@@ -137,6 +143,7 @@ class NameFormatItem : public LogFormatter::FormatItem {
     }
 };
 
+// ThreadIdFormatItem用于输出线程ID
 class ThreadIdFormatItem : public LogFormatter::FormatItem {
    public:
     ThreadIdFormatItem(const std::string& str = "") {}
@@ -147,6 +154,7 @@ class ThreadIdFormatItem : public LogFormatter::FormatItem {
     }
 };
 
+// 协程ID
 class FiberIdFormatItem : public LogFormatter::FormatItem {
    public:
     FiberIdFormatItem(const std::string& str = "") {}
@@ -167,6 +175,7 @@ class ThreadNameFormatItem : public LogFormatter::FormatItem {
     }
 };
 
+// 按format字符串解析生成固定时间戳
 class DateTimeFormatItem : public LogFormatter::FormatItem {
    public:
     DateTimeFormatItem(const std::string& format = "%Y-%m-%d %H:%M:%S") : m_format(format) {
@@ -607,8 +616,10 @@ void LogFormatter::init() {
     }
     static std::map<std::string, std::function<FormatItem::ptr(const std::string& str)>>
         s_format_items = {
-#define XX(str, C) \
-    {#str, [](const std::string& fmt) { return FormatItem::ptr(std::make_shared<C>(fmt)); }}
+#define XX(str, C)                                                                             \
+    {                                                                                          \
+        #str, [](const std::string& fmt) { return FormatItem::ptr(std::make_shared<C>(fmt)); } \
+    }
 
             XX(m, MessageFormatItem),     // m:消息
             XX(p, LevelFormatItem),       // p:日志级别

@@ -413,6 +413,10 @@ class CASLock : Noncopyable {
     /**
      * @brief 上锁
      */
+
+    // 尝试把m_mutex 从0设置到1
+    // 如果修改成功，则拿到锁
+    // 否则一直自旋
     void lock() {
         while (std::atomic_flag_test_and_set_explicit(&m_mutex, std::memory_order_acquire));
     }
