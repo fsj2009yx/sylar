@@ -11,9 +11,12 @@ static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 static thread_local Scheduler* t_scheduler = nullptr;
 static thread_local Fiber* t_scheduler_fiber = nullptr;
 
+// 初始化协程调度器
 Scheduler::Scheduler(size_t threads, bool use_caller, const std::string& name) : m_name(name) {
     SYLAR_ASSERT(threads > 0);
 
+    // use_caller表示是否将当前线程包含在调度器中,如果包含则当前线程也会被调度器调度
+    // 如果use_caller为false，则当前线程不包含在调度器中，调度器会创建一个新的线程来运行调度器的主循环
     if (use_caller) {
         sylar::Fiber::GetThis();
         --threads;
@@ -21,7 +24,8 @@ Scheduler::Scheduler(size_t threads, bool use_caller, const std::string& name) :
         SYLAR_ASSERT(GetThis() == nullptr);
         t_scheduler = this;
 
-        m_rootFiber.reset(NewFiber(std::bind(&Scheduler::run, this), 0, true), FreeFiber);
+        // 创建一个新的协程，运行调度器的主循环，并将其作为调度器的主协程
+        m_rootFiber.reset(NewFiber([this] { run(); }, 0, true), FreeFiber);
         // m_rootFiber.reset(new Fiber(std::bind(&Scheduler::run, this), 0, true));
         sylar::Thread::SetName(m_name);
 
@@ -58,9 +62,11 @@ void Scheduler::start() {
     SYLAR_ASSERT(m_threads.empty());
 
     m_threads.resize(m_threadCount);
+
+    // 创建线程池
     for (size_t i = 0; i < m_threadCount; ++i) {
-        m_threads[i] = std::make_shared<Thread>(std::bind(&Scheduler::run, this),
-                                                m_name + "_" + std::to_string(i));
+        m_threads[i] =
+            std::make_shared<Thread>([this] { run(); }, m_name + "_" + std::to_string(i));
         m_threadIds.push_back(m_threads[i]->getId());
     }
     lock.unlock();
@@ -140,7 +146,8 @@ void Scheduler::run() {
         t_scheduler_fiber = Fiber::GetThis().get();
     }
 
-    Fiber::ptr idle_fiber(NewFiber(std::bind(&Scheduler::idle, this)), FreeFiber);
+    // idle_fiber是调度器的空闲协程，当调度器没有任务可调度时，空闲协程会被调度器调度执行
+    Fiber::ptr idle_fiber(NewFiber([this] { idle(); }), FreeFiber);
     // Fiber::ptr idle_fiber(new Fiber(std::bind(&Scheduler::idle, this)));
     Fiber::ptr cb_fiber;
 
@@ -258,6 +265,7 @@ void Scheduler::switchTo(int thread) {
     Fiber::YieldToHold();
 }
 
+// 输出协程调度器的状态信息
 std::ostream& Scheduler::dump(std::ostream& os) {
     os << "[Scheduler name=" << m_name << " size=" << m_threadCount
        << " active_count=" << m_activeThreadCount << " idle_count=" << m_idleThreadCount

@@ -101,20 +101,27 @@ void IOManager::FdContext::triggerEvent(IOManager::Event event) {
 
 IOManager::IOManager(size_t threads, bool use_caller, const std::string& name)
     : Scheduler(threads, use_caller, name) {
+    // 创建epoll文件句柄
     m_epfd = epoll_create(5000);
     SYLAR_ASSERT(m_epfd > 0);
 
+    // 创建管道文件句柄
     int rt = pipe(m_tickleFds);
     SYLAR_ASSERT(!rt);
 
+    // 将管道的读端加入到epoll事件监听中
     epoll_event event;
     memset(&event, 0, sizeof(epoll_event));
     event.events = EPOLLIN | EPOLLET;
+
+    // 监听pipe的读端
     event.data.fd = m_tickleFds[0];
 
+    // 设置pipe的读端为非阻塞
     rt = fcntl(m_tickleFds[0], F_SETFL, O_NONBLOCK);
     SYLAR_ASSERT(!rt);
 
+    // 向内核注册事件监听
     rt = epoll_ctl(m_epfd, EPOLL_CTL_ADD, m_tickleFds[0], &event);
     SYLAR_ASSERT(!rt);
 
@@ -147,6 +154,7 @@ void IOManager::contextResize(size_t size) {
     }
 }
 
+//
 int IOManager::addEvent(int fd, Event event, std::function<void()> cb) {
     FdContext* fd_ctx = nullptr;
     RWMutexType::ReadLock lock(m_mutex);

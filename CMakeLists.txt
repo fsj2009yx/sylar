@@ -49,6 +49,7 @@ message("****WITH_TAIR : ${WITH_TAIR} ****")
 message("****WITH_SQLITE3 : ${WITH_SQLITE3} ****")
 message("****WITH_PARQUET : ${WITH_PARQUET} ****")
 message("****ENABLE_PROFILER : ${ENABLE_PROFILER} ****")
+message(STATUS "Standard include directories: ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES}")
 
 #find_package(Boost REQUIRED)
 #if(Boost_FOUND)

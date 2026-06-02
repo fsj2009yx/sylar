@@ -11,6 +11,7 @@
 
 namespace sylar {
 
+// FileInfoManager 管理明确的磁盘文件信息，包含文件路径、md5、数据内容、修改时间、文件大小等信息
 class FileInfoManager;
 class FileInfo {
     friend class FileInfoManager;

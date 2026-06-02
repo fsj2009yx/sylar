@@ -81,23 +81,35 @@ struct timer_info {
     int cancelled = 0;
 };
 
+// @param[in] fd 文件描述符
+// @param[in] fun 原始函数
+// @param[in] hook_fun_name 原始函数名称
+// @param[in] event 事件类型
+// @param[in] timeout_so 超时时间类型，SO_RCVTIMEO或SO_SNDTIMEO
+
 template <typename OriginFun, typename... Args>
+// @brief 执行IO操作的模板函数
+
 static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name, uint32_t event,
                      int timeout_so, Args &&...args) {
+    // 如果hook未启用，直接调用原始函数
     if (!sylar::t_hook_enable) {
         return fun(fd, std::forward<Args>(args)...);
     }
 
+    // 获取文件描述符的context
     sylar::FdCtx::ptr ctx = sylar::FdMgr::GetInstance()->get(fd);
     if (!ctx) {
         return fun(fd, std::forward<Args>(args)...);
     }
 
+    // EBADF枚举，表示文件描述符无效，通常是因为文件描述符已经被关闭或者没有正确打开。
     if (ctx->isClose()) {
         errno = EBADF;
         return -1;
     }
 
+    // 如果不是socket或者用户主动设置了非阻塞，直接调用原始函数
     if (!ctx->isSocket() || ctx->getUserNonblock()) {
         return fun(fd, std::forward<Args>(args)...);
     }
@@ -146,6 +158,7 @@ retry:
                 errno = tinfo->cancelled;
                 return -1;
             }
+            // 前向goto,继续执行IO操作
             goto retry;
         }
     }
@@ -153,6 +166,8 @@ retry:
     return n;
 }
 
+// 暴露在外部的C函数，重命名为原始函数名称，调用do_io模板函数实现hook功能
+// 在lib目录下生成libsylar.a，编译时链接该静态库，使用时包含hook.h头文件即可实现hook功能
 extern "C" {
 #define XX(name) name##_fun name##_f = nullptr;
 HOOK_FUN(XX);
@@ -165,10 +180,7 @@ unsigned int sleep(unsigned int seconds) {
 
     sylar::Fiber::ptr fiber = sylar::Fiber::GetThis();
     sylar::IOManager *iom = sylar::IOManager::GetThis();
-    iom->addTimer(seconds * 1000,
-                  std::bind((void(sylar::Scheduler::*)(sylar::Fiber::ptr, int thread)) &
-                                sylar::IOManager::schedule,
-                            iom, fiber, -1));
+    iom->addTimer(seconds * 1000, [fiber, iom]() { iom->schedule(fiber); });
     sylar::Fiber::YieldToHold();
     return 0;
 }
@@ -179,10 +191,7 @@ int usleep(useconds_t usec) {
     }
     sylar::Fiber::ptr fiber = sylar::Fiber::GetThis();
     sylar::IOManager *iom = sylar::IOManager::GetThis();
-    iom->addTimer(usec / 1000,
-                  std::bind((void(sylar::Scheduler::*)(sylar::Fiber::ptr, int thread)) &
-                                sylar::IOManager::schedule,
-                            iom, fiber, -1));
+    iom->addTimer(usec / 1000, [fiber, iom]() { iom->schedule(fiber); });
     sylar::Fiber::YieldToHold();
     return 0;
 }
@@ -195,9 +204,7 @@ int nanosleep(const struct timespec *req, struct timespec *rem) {
     int timeout_ms = req->tv_sec * 1000 + req->tv_nsec / 1000 / 1000;
     sylar::Fiber::ptr fiber = sylar::Fiber::GetThis();
     sylar::IOManager *iom = sylar::IOManager::GetThis();
-    iom->addTimer(timeout_ms, std::bind((void(sylar::Scheduler::*)(sylar::Fiber::ptr, int thread)) &
-                                            sylar::IOManager::schedule,
-                                        iom, fiber, -1));
+    iom->addTimer(timeout_ms, [fiber, iom]() { iom->schedule(fiber); });
     sylar::Fiber::YieldToHold();
     return 0;
 }

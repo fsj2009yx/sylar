@@ -22,6 +22,11 @@ FdCtx::FdCtx(int fd)
 
 FdCtx::~FdCtx() {}
 
+// 初始化FdManager，作用是：
+//  1. 判断fd是否有效
+//  2. 判断fd是否是socket
+//  3. 如果是socket，设置为非阻塞
+
 bool FdCtx::init() {
     if (m_isInit) {
         return true;
