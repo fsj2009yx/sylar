@@ -10,27 +10,22 @@
 #define __SYLAR_UTIL_H__
 
 #include <cxxabi.h>
-#include <google/protobuf/message.h>
-#include <json/json.h>
 #include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <yaml-cpp/yaml.h>
 
 #include <boost/lexical_cast.hpp>
+#include <ctime>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 
-#include "sylar/util/crypto_util.h"
 #include "sylar/util/hash_util.h"
-#include "sylar/util/json_util.h"
-#include "sylar/util/trace.h"
-#include "sylar/util/tracker.h"
 
 namespace sylar {
 
@@ -297,17 +292,11 @@ class StringUtil {
 std::string GetHostName();
 std::string GetIPv4();
 
-bool YamlToJson(const YAML::Node& ynode, Json::Value& jnode);
-bool JsonToYaml(const Json::Value& jnode, YAML::Node& ynode);
-
 template <class T>
 const char* TypeToName() {
     static const char* s_name = abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, nullptr);
     return s_name;
 }
-
-typedef std::shared_ptr<google::protobuf::Message> PbMessagePtr;
-std::string PBToJsonString(const google::protobuf::Message& message);
 
 template <class Iter>
 std::string Join(Iter begin, Iter end, const std::string& tag) {

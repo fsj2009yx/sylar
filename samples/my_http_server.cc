@@ -1,11 +1,11 @@
 #include "sylar/http/http_server.h"
 #include "sylar/log.h"
 
-sylar::Logger::ptr g_logger = SYLAR_LOG_ROOT();
+static sylar::Logger::ptr g_logger = SYLAR_LOG_ROOT();
 sylar::IOManager::ptr worker;
 void run() {
     g_logger->setLevel(sylar::LogLevel::INFO);
-    sylar::Address::ptr addr = sylar::Address::LookupAnyIPAddress("0.0.0.0:8020");
+    sylar::Address::ptr addr = sylar::Address::LookupAnyIPAddress("0.0.0.0:18096");
     if (!addr) {
         SYLAR_LOG_ERROR(g_logger) << "get address error";
         return;

@@ -4,7 +4,6 @@
 #include "log.h"
 
 namespace sylar {
-
 static sylar::ConfigVar<uint64_t>::ptr g_tcp_server_read_timeout = sylar::Config::Lookup(
     "tcp_server.read_timeout", (uint64_t)(60 * 1000 * 2), "tcp server read timeout");
 
@@ -76,7 +75,8 @@ void TcpServer::startAccept(Socket::ptr sock) {
         Socket::ptr client = sock->accept();
         if (client) {
             client->setRecvTimeout(m_recvTimeout);
-            m_ioWorker->schedule(std::bind(&TcpServer::handleClient, shared_from_this(), client));
+            m_ioWorker->schedule(
+                [capture0 = shared_from_this(), client] { capture0->handleClient(client); });
         } else {
             SYLAR_LOG_ERROR(g_logger)
                 << "accept errno=" << sock->getError() << " errstr=" << strerror(sock->getError());
@@ -135,5 +135,4 @@ std::string TcpServer::toString(const std::string& prefix) {
     }
     return ss.str();
 }
-
 }  // namespace sylar

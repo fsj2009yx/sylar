@@ -1,8 +1,0 @@
-mysql:
-    dbs:
-        test:
-            user: sylar
-            passwd: sylar
-            host: 127.0.0.1
-            dbname: sylar
-            pool: 2

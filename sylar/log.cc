@@ -7,11 +7,9 @@
 #include <iostream>
 #include <map>
 
-#include "application.h"
 #include "config.h"
 #include "env.h"
 #include "macro.h"
-#include "sylar/proto/logserver.pb.h"
 #include "util.h"
 
 namespace sylar {
@@ -457,51 +455,12 @@ std::string StdoutLogAppender::toYamlString() {
 }
 
 LogserverAppender::LogserverAppender(const std::string& topic) : m_topic(topic) {
-    // auto app = sylar::Application::GetInstance()->getRockSDLoadBalance();
-    // m_lb = app->get("logserver", "logserver", true);
 }
 
 void LogserverAppender::log(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) {
-    if (level >= m_level) {
-        std::stringstream ss;
-        MutexType::Lock lock(m_mutex);
-        m_formatter->format(ss, logger, level, event);
-        lock.unlock();
-        logserver::LogNotify nty;
-        nty.set_body(ss.str());
-        nty.set_topic(m_topic);
-        nty.set_key(m_key);
-
-        sylar::RockNotify::ptr rock_nty = std::make_shared<sylar::RockNotify>();
-        rock_nty->setNotify(100);
-        rock_nty->setAsPB(nty);
-
-        for (size_t i = 0; i < 3; ++i) {
-            if (!m_lb) {
-                auto app = sylar::Application::GetInstance()->getRockSDLoadBalance();
-                if (app) {
-                    m_lb = app->get("logserver", "logserver", true);
-                }
-            }
-            if (!m_lb) {
-                continue;
-            }
-            auto item = m_lb->get();
-            if (!item) {
-                continue;
-            }
-            auto conn = item->getStreamAs<sylar::RockStream>();
-            if (!conn) {
-                continue;
-            }
-            if (conn->sendMessage(rock_nty) <= 0) {
-                continue;
-            }
-            return;
-        }
-
-        // SYLAR_LOG_ERROR(g_logger) << "send to logserver fail, " << ss.str();
-    }
+    (void)logger;
+    (void)level;
+    (void)event;
 }
 
 std::string LogserverAppender::toYamlString() {

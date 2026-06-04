@@ -1,3 +1,0 @@
-server:
-    work_path: /apps/work/sylar
-    pid_file: sylar.pid
