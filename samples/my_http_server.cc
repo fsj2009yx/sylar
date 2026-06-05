@@ -19,6 +19,17 @@ void run() {
         sleep(1);
     }
 
+    // /bench接口，返回OK，用于测试服务器性能
+    http_server->getServletDispatch()->addServlet(
+        "/bench", [](sylar::http::HttpRequest::ptr request, sylar::http::HttpResponse::ptr response,
+                     sylar::SocketStream::ptr session) {
+            (void)request;
+            (void)session;
+            response->setHeader("Content-Type", "text/plain");
+            response->setBody("OK\n");
+            return 0;
+        });
+
     if (ssl) {
         // http_server->loadCertificates("/home/apps/soft/sylar/keys/server.crt",
         // "/home/apps/soft/sylar/keys/server.key");
